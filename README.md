@@ -5,3 +5,4 @@ Brain Storming:
 - Ver-/Entriegelung elektromagnetisch
 - single RFID-Lesegerät mit Display und 4x4 Tastatur
 - XBee/ZBee Modul verbindet mit SYMCON
+- ![Lock_1]
