@@ -1,9 +1,10 @@
 # ToolsLocker
-Schrank mit X Türen für wertvolle Werkzeuge - Entnahme per Mitglieder RFID-Chip
+Schrank mit 10 Türen für wertvolle Werkzeuge - Entnahme per Mitglieder RFID-Chip
 <br><br>
 Brain Storming:
-- Schrank mit X Fächern
-- Ver-/Entriegelung elektromagnetisch
+- Schrank mit 10 Fächern
+- Verriegelung mechanisch (mit Hand zudrücken)
+- Entriegelung elektromagnetisch (12V DC 2A Puls)
 
 ![Lock_1](images/Lock_1.png)
 
