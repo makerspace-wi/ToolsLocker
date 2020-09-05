@@ -2,7 +2,10 @@
 Schrank mit 10 Türen für wertvolle Werkzeuge - Entnahme per Mitglieder RFID-Chip
 <br><br>
 Brain Storming:
-- Schrank mit 10 Fächern
+- Schrank mit 10 Fächern. Geplant ist 2 Fächer mit doppelter Höhe einzurichten
+  
+![Locker_1](images/locker_1.jpg)
+
 - Verriegelung mechanisch (mit Hand zudrücken)
 - Entriegelung elektromagnetisch (12V DC 2A Puls)
 
