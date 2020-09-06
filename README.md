@@ -16,5 +16,7 @@ Brain Storming:
 - single RFID-Lesegerät mit Display und 4x4 Tastatur
 - XBee/ZBee Modul verbindet mit SYMCON
 
-**Realisierungsvorschläge** <br>
+<br>
+<h1>Realisierungsvorschläge</h1> <br>
+
 [Zum Alpha Blockschaltbild](doc/ToolsLockerSchaltung_A0.pdf)
