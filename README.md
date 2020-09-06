@@ -1,5 +1,6 @@
 # ToolsLocker
-Schrank mit 10 Türen für wertvolle Werkzeuge - Entnahme per Mitglieder RFID-Chip
+Schrank mit 10 Türen für empfindliche/wertvolle Werkzeuge - Entnahme per Mitglieder RFID-Chip<br>
+Geloggt wird UID2, TimeStamp Entnahme, Fachnummer(1 - 10), TimeStamp Rückgabe
 <br><br>
 Brain Storming:
 - Schrank mit 10 Fächern. Geplant ist 2 Fächer mit doppelter Höhe einzurichten
