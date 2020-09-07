@@ -16,7 +16,8 @@
   ---------- (?????)
 
   Commands from Raspi
-  'time'   - format time33.33.3333 33:33:33
+  'time'   - format time 'dd.mm.yyyy hh:mm:ss'
+  'rc;open'    - format r=Row and c=column - i.e. '23;open' => Open door in row 2, column 3
   ---------- (?????)
 
   last change: 06.09.2020 by Michael Muehl
