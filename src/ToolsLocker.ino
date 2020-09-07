@@ -13,11 +13,13 @@
   'Ident;on'   - machine reporting ON-Status
   'Ident;off'  - machine reporting OFF-Status
   'card;nn...' - uid_2 from reader
+
+  'Ident;open;rc'   - machine reporting which door was opened
   ---------- (?????)
 
   Commands from Raspi
   'time'   - format time 'dd.mm.yyyy hh:mm:ss'
-  'rc;open'    - format r=Row and c=column - i.e. '23;open' => Open door in row 2, column 3
+  'rco'    - format r=Row and c=column - i.e. '23o' => Open door in row 2, column 3
   ---------- (?????)
 
   last change: 06.09.2020 by Michael Muehl
