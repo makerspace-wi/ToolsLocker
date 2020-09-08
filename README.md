@@ -21,4 +21,5 @@ Brain Storming:
 
 [Zum Alpha 0 Blockschaltbild](doc/ToolsLockerSchaltung_A0.pdf)<br>
 [Zum Alpha 1 Schaltbild](doc/ToolsLockTreiberI2C_SCH.PDF)<br>
+Es gibt bereits ein modifiziertes Schaltbild mit reduzierter Bauelementezahl
 [Zum Alpha 2 Schaltbild](doc/ToolsLockTreiberI2CLight_SCH.PDF)
