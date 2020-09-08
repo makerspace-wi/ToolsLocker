@@ -19,4 +19,5 @@ Brain Storming:
 <br>
 <h1>Realisierungsvorschläge</h1> <br>
 
-[Zum Alpha Blockschaltbild](doc/ToolsLockerSchaltung_A0.pdf)
+[Zum Alpha 0 Blockschaltbild](doc/ToolsLockerSchaltung_A0.pdf)<br>
+[Zum Alpha 1 Blockschaltbild](doc/ToolsLockTreiberI2CLight_SCH.PDF)
