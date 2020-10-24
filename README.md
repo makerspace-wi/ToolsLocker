@@ -15,7 +15,8 @@ Brain Storming:
 
 ![Abmessungen](doc/Bildschirmfoto%202020-09-07%20um%2012.40.23.png)
 
-- single RFID-Lesegerät mit Display und 4x4 Tastatur
+- single RFID-Lesegerät mit Display
+- jede Tür hat einen Taster (zum öffnen) und eine LED
 - XBee/ZBee Modul Funkbrücke zu SYMCON
 
 <br>
