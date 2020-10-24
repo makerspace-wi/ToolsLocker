@@ -13,6 +13,8 @@ Brain Storming:
 
 ![Lock_1](images/Lock_1.png)
 
+![Abmessungen](doc/Bildschirmfoto%202020-09-07%20um%2012.40.23.png)
+
 - single RFID-Lesegerät mit Display und 4x4 Tastatur
 - XBee/ZBee Modul Funkbrücke zu SYMCON
 
