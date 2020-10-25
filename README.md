@@ -13,7 +13,7 @@ Brain Storming:
 
 ![Lock_1](images/Lock_1.png)
 
-![Abmessungen](doc/Bildschirmfoto%202020-09-07%20um%2012.40.23.png)
+![Abmessungen](doc/Abmessungen.png)
 
 - single RFID-Lesegerät mit Display
 - jede Tür hat einen Taster (zum öffnen) und eine LED
