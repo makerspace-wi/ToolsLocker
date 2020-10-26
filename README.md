@@ -26,3 +26,5 @@ Brain Storming:
 [Zum Alpha 1 Schaltbild](doc/ToolsLockTreiberI2C_SCH.PDF)<br>
 Es gibt bereits ein modifiziertes Schaltbild mit reduzierter Bauelementezahl
 [Zum Alpha 2 Schaltbild](doc/ToolsLockTreiberI2CLight_SCH.PDF)
+
+26.10.2020 - Project currently on hold as priority was given to GLC
