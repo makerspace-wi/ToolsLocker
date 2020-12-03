@@ -27,4 +27,10 @@ Brain Storming:
 Es gibt bereits ein modifiziertes Schaltbild mit reduzierter Bauelementezahl
 [Zum Alpha 2 Schaltbild](doc/ToolsLockTreiberI2CLight_SCH.PDF)
 
-26.10.2020 - Project currently on hold as priority was given to GLC
+03.12.2020 - Es geht weiter mit dem ToolsLocker!
+
+Erste Versuche waren bereits erfolgreich und Michael M. hat bereits den ersten Platinenentwurf für jeweils 4 Türen fertig gestellt.
+
+Grober Funktionsablauf (Vorschlag):
+
+
