@@ -31,6 +31,10 @@ Es gibt bereits ein modifiziertes Schaltbild mit reduzierter Bauelementezahl
 
 Erste Versuche waren bereits erfolgreich und Michael M. hat bereits den ersten Platinenentwurf für jeweils 4 Türen fertig gestellt.
 
+Hier schon al eine Idee, wie die PCBs für den ToolsLocker aussehen werden:
+
+![Bildschirmfoto 2020-12-05 um 17 13 34](https://user-images.githubusercontent.com/42463588/101286534-4fc3b400-37eb-11eb-9eb7-2b88002af4fe.png)
+
 Grober Funktionsablauf (Vorschlag):
 
 
