@@ -38,3 +38,4 @@ Hier schon al eine Idee, wie die PCBs für den ToolsLocker aussehen werden:
 Grober Funktionsablauf (Vorschlag):
 
 
+[ToolsLockTreiberI2CML_SCH.PDF](https://github.com/makerspace-wi/ToolsLocker/files/5668539/ToolsLockTreiberI2CML_SCH.PDF)
