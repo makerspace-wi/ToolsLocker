@@ -33,7 +33,7 @@ Das Konzept sieht wie folgt aus:
 - es gibt 2 Netzteile: 1 kleines für die Elektronik und ein Leistungsstarkes 12V Netzteil für die Türschlossmagneten
 - der Prozessor kommuniziert über eine XBee/ZBee Modul Funkbrücke mit unserem SYMCON-System, welches alle Überprüfungen machen wird, Freigaben erteilt und alle Vorgänge in einer Datenbank loggt
 
-Hier die [System Blockschaltbilder](doc/ToolsLock_Schaltung_B0.pdf)<br>
+Hier dazu die [System Blockschaltbilder](doc/ToolsLock_Schaltung_B0.pdf)<br>
 
 Wen es interessiert findet hier [das Schaltbild](doc//ToolsLockTreiberI2CML_SCH.PDF) der Interface Platinen<br>
 
