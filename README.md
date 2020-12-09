@@ -31,7 +31,7 @@ Das Konzept sieht wie folgt aus:
 - 3 Interface Module die mit dem Controller über I2C-Bus kommunizieren
 - jedes Interface Module kann 4 elektrische Schlösser und 4 Drucktaster mit LED-Indikator bedienen
 - es gibt 2 Netzteile: 1 kleines für die Elektronik und ein Leistungsstarkes 12V Netzteil für die Türschlossmagneten
-- der Prozessor kommuniziert über XBee ZBee mit unserem SYMCON-System, welches alle Überprüfungen machen wird, Freigaben erteilt und alle Vorgänge in einer Datenbank loggt
+- der Prozessor kommuniziert über eine XBee/ZBee Modul Funkbrücke mit unserem SYMCON-System, welches alle Überprüfungen machen wird, Freigaben erteilt und alle Vorgänge in einer Datenbank loggt
 
 Hier die [System Blockschaltbilder](doc/ToolsLock_Schaltung_B0.pdf)<br>
 
