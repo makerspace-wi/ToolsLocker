@@ -331,11 +331,11 @@ void UnLoCallback() {   // 500ms Tick
     toggle = !toggle;
     if (toggle)
     { // toggle GREEN Button LED
-      flash_led(3);
+      flash_led(2);
     }
     else
     {
-      flash_led(2);
+      flash_led(3);
     }
     timer -= 1;
     minutes = timer / 120;
@@ -389,7 +389,7 @@ void ToolLockDoors()
           sc = 1;
           checkDoors = false;
           countDoors = 0;
-          Serial.println(String(IDENT) + ";DR" + String(sr) + String(sr) + ";DO");
+          Serial.println(String(IDENT) + ";DR" + String(sc) + String(sr) + ";DO");
           lcd.setCursor(0, 3);
           lcd.print("Close Door " + String(sc) + String(sr) + " please");
         }
@@ -402,7 +402,7 @@ void ToolLockDoors()
           sc = 2;
           checkDoors = false;
           countDoors = 0;
-          Serial.println(String(IDENT) + ";DR" + String(sr) + String(sr) + ";DO");
+          Serial.println(String(IDENT) + ";DR" + String(sc) + String(sr) + ";DO");
           lcd.setCursor(0, 3);
           lcd.print("Close Door " + String(sc) + String(sr) + " please");
         }
@@ -415,7 +415,7 @@ void ToolLockDoors()
           sc = 3;
           checkDoors = false;
           countDoors = 0;
-          Serial.println(String(IDENT) + ";DR" + String(sr) + String(sr) + ";DO");
+          Serial.println(String(IDENT) + ";DR" + String(sc) + String(sr) + ";DO");
           lcd.setCursor(0, 3);
           lcd.print("Close Door " + String(sc) + String(sr) + " please");
         }
@@ -438,7 +438,6 @@ void ToolButCheck()
   {
     for (sr = 1; sr < 5; sr++)
     {
-      // Serial.println(String(IDENT) + ";R1" + String(I2CAdress[2]) + ";R2" + String(I2CAdress[3]) + ";R3" + String(I2CAdress[4]) + ";DC" + String(sr));
       if (I2CAdress[2] == I2CDoors1)
       { // if channel 1 is a live
         sc = 1;
@@ -499,7 +498,6 @@ void ToolButCheck()
           nr2Open[0] = -1;
           nr2Open[1] = sc;
           nr2Open[2] = sr;
-          // Serial.println(String(nr2Open[0]) + ";DR" + String(sc) + String(sr) + ";2O");
           tTBC.disable();
           tTOD.enable();
           tTOD.restartDelayed(100);
@@ -618,7 +616,6 @@ void ToolOpenDoor()
 
     if (nr2Open[1] == 3)
     {
-      // Serial.println(String(nr2Open[2]) + String(tld3.digitalRead(butTast[nr2Open[2]])) + String(tld3.digitalRead(posSchl[nr2Open[2]])) + String(countTBo));
       if (tld3.digitalRead(posSchl[nr2Open[2]]) && countTBo == debouTBo)
       {
         tTOD.disable();
