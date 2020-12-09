@@ -22,10 +22,8 @@ Brain Storming:
 <br>
 <h1>Realisierungsvorschläge</h1> <br>
 
-[Zum Alpha 0 Blockschaltbild](doc/ToolsLockerSchaltung_A0.pdf)<br>
-[Zum Alpha 1 Schaltbild](doc/ToolsLockTreiberI2C_SCH.PDF)<br>
-Es gibt bereits ein modifiziertes Schaltbild mit reduzierter Bauelementezahl
-[Zum Alpha 2 Schaltbild](doc/ToolsLockTreiberI2CLight_SCH.PDF)
+[Zum Projektschaltbild](doc/ToolsLock_Schaltung_B0.pdf)<br>
+[Zum Schaltbild](doc//ToolsLockTreiberI2CML_SCH.PDF)<br>
 
 03.12.2020 - Es geht weiter mit dem ToolsLocker!
 
@@ -37,5 +35,3 @@ Hier schon al eine Idee, wie die PCBs für den ToolsLocker aussehen werden:
 
 Grober Funktionsablauf (Vorschlag):
 
-
-[ToolsLockTreiberI2CML_SCH.PDF](https://github.com/makerspace-wi/ToolsLocker/files/5668539/ToolsLockTreiberI2CML_SCH.PDF)
