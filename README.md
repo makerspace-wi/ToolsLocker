@@ -46,8 +46,9 @@ So wird das PCBs für den ToolsLocker aussehen:
 
 Status heute Mittwoch der 09.12.202:
 
-        - Laborversuchsaufbau mit einem Schloss und einem Taster wurde bereits aufgebaut und erfolgreich getestet.
-        - Layout PCB Interface Platine ist abgeschlossen - 5 Platinen sind bestellt und bereits auf dem Weg aus China.
+        - Laborversuchsaufbau mit einem Schloss und einem Taster wurde bereits aufgebaut und <br>
+        erfolgreich getestet.
+        - Layout PCB Interface Platine ist abgeschlossen - 5 Platinen sind <br>bestellt und bereits auf dem Weg aus China.
 
 
 Nächster Schritt:<br>
