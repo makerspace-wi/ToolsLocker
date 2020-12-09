@@ -22,9 +22,6 @@ Brain Storming:
 <br>
 <h1>Realisierungsvorschläge</h1> <br>
 
-[Zum Projektschaltbild](doc/ToolsLock_Schaltung_B0.pdf)<br>
-
-
 03.12.2020 - Es geht weiter mit dem ToolsLocker!
 
 Erste Versuche waren bereits erfolgreich und Michael M. hat bereits den ersten Platinenentwurf für jeweils 4 Türen fertig gestellt.
