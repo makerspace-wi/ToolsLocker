@@ -41,7 +41,7 @@ So wird das PCBs für den ToolsLocker aussehen:
 
 ![Bildschirmfoto 2020-12-05 um 17 13 34](https://user-images.githubusercontent.com/42463588/101286534-4fc3b400-37eb-11eb-9eb7-2b88002af4fe.png)
 
-Status - heute Mittwoch der 09.12.202:
+Status - heute Mittwoch der 09.12.2020:
 
 - Laborversuchsaufbau mit einem Schloss und einem Taster wurde bereits aufgebaut und erfolgreich getestet.
 - Layout PCB Interface Platine ist abgeschlossen - 5 Platinen sind bestellt und bereits auf dem Weg aus China.
