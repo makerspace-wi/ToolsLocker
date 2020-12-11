@@ -10,27 +10,26 @@
   'TOLO'  - from xBee (=Ident)
 
   'Ident;POR;Vx.x.x' - machine power on reset and sw version (Ident;por;Vx.x.x)
-
   'card;nn...'       - uid_2 from reader
   'Ident;opt'        - Ident is startet and time is on
-  'Ident;drxx;DO'    - Ident door xx (colum|row) max. 3|4 "dr34" is open!!! (Error) check after power doors on
-  'Ident;drxx;OP'    - Ident door xx (colum|row) ---> "dr34" is opened
-  'Ident;drxx;CL'    - Ident door xx (colum|row) ---> "dr34" is closed
+  'Ident;OP;drxx'    - Ident; door opened with number xx (colum|row) ---> "dr34"
+  'Ident;CL;drxx'    - Ident; door closed with number xx (colum|row) ---> "dr34"
   'Ident;off'        - Ident reporting nobody logged in
 
   Commands from Raspi
   'time'      - format time33.33.3333 33:33:33
   'noreg'     - RFID-Chip not registed
-  'odtxx'     - to open door for xx min possible "odt15"
-  'odnyy'     - open door yy (colum|row) ---> "odn34"
+  'dotxx'     - doors can be opened during next xx min "odt15"
+  'odiyy'     - open door immediately with number yy (colum|row) ---> "odi34"
+  'ondzz'     - open next door with number zz  (colum|row) ---> "ond34"
   'tllo'      - from toollocker log all off
   'r3t...'    - display text in row 3 "r3tabcde12345", max 20
   'r4t...'    - display text in row 4 "r4tabcde12345", max 20
 
-  last change: 06.12.2020 by Michael Muehl
-  changed: alpha version with one schloss and button!!!!!!!!!!!!!
+  last change: 11.12.2020 by Michael Muehl
+  changed: beta version for 12 locks, tested one lock and button!!!!!!!!!!!!!
 */
-#define Version "0.9.2" // (Test =0.9.x ==> 0.9.3)
+#define Version "0.9.3" // (Test =0.9.x ==> 0.9.4)
 
 #include <Arduino.h>
 #include <TaskScheduler.h>
@@ -135,15 +134,14 @@ void flash_led(int);
 // TASKS
 Task tM(TASK_SECOND / 2, TASK_FOREVER, &checkXbee);	    // 500ms main task
 Task tR(TASK_SECOND / 2, 0, &repeatMES);                // 500ms * repMES repeat messages
-Task tU(TASK_SECOND / 2, TASK_FOREVER, &UnLoCallback);  // 500ms
-Task tB(TASK_SECOND * 5, TASK_FOREVER, &BlinkCallback); // 5000ms added M. Muehl
+Task tU(TASK_SECOND / 4, TASK_FOREVER, &UnLoCallback);  // 250ms unlock ID (time = 4 * 60)
+Task tB(TASK_SECOND * 5, TASK_FOREVER, &BlinkCallback); // 5000ms blinking for several events
 
-Task tBU(TASK_SECOND / 10, 6, &BuzzerOn);               // 100ms 6x =600ms added by DieterH on 22.10.2017
-Task tBD(1, TASK_ONCE, &FlashCallback);                 // Flash Delay
-Task tDF(1, TASK_ONCE, &DispOFF);                       // display off
+Task tBU(TASK_SECOND / 10, 6, &BuzzerOn);               // 100ms 6x =600ms buzzer on for 6 times
+Task tBD(1, TASK_ONCE, &FlashCallback);                 // Flash Delay leds
+Task tDF(1, TASK_ONCE, &DispOFF);                       // display off after xx sec
 
-Task tTLD(TASK_SECOND, TASK_FOREVER, &ToolLockDoors);     // 1000ms Check if all doors are closed
-Task tTBC(TASK_SECOND / 10, TASK_FOREVER, &ToolButCheck); // 100ms Check if a button is pressed for open a door
+Task tTBC(TASK_SECOND / 10, TASK_FOREVER, &ToolButCheck); // 100ms Check if a button is pressed for open or close one door
 Task tTOD(1, TASK_ONCE, &ToolOpenDoor);                   // Open a door
 
 // VARIABLES
@@ -247,7 +245,6 @@ void setup()
     runner.addTask(tBD);
     runner.addTask(tDF);
 
-    runner.addTask(tTLD);
     runner.addTask(tTBC);
     runner.addTask(tTOD);
  
@@ -258,7 +255,6 @@ void setup()
     flash_led(1);
     dispRFID();
     tM.enable();         // xBee check
-    tTLD.enable();       // check if all doors are closed
     Serial.print("+++"); //Starting the request of IDENT
   }
   else 
@@ -338,8 +334,8 @@ void UnLoCallback() {   // 500ms Tick
       flash_led(3);
     }
     timer -= 1;
-    minutes = timer / 120;
-    if (timer % 120 == 0)
+    minutes = timer / 240;
+    if (timer % 240 == 0)
     {
       char tbs[8];
       sprintf(tbs, "% 4d", minutes);
@@ -374,61 +370,6 @@ void DispOFF() {
   lcd.clear();
   but_led(1);
   flash_led(1);
-}
-
-void ToolLockDoors()
-{
-  if (digitalRead(SSR_POWER))
-  {
-    for (sr = 1; sr < 5; sr++)
-    {
-      if (I2CAdress[2] == I2CDoors1)
-      {
-        if (tld1.digitalRead(posSchl[sr]) && countTBo == 0 && countTBc == 0)
-        {
-          sc = 1;
-          checkDoors = false;
-          countDoors = 0;
-          Serial.println(String(IDENT) + ";DR" + String(sc) + String(sr) + ";DO");
-          lcd.setCursor(0, 3);
-          lcd.print("Close Door " + String(sc) + String(sr) + " please");
-        }
-      }
-
-      if (I2CAdress[3] == I2CDoors2)
-      {
-        if (tld2.digitalRead(posSchl[sr]) && countTBo == 0 && countTBc == 0)
-        {
-          sc = 2;
-          checkDoors = false;
-          countDoors = 0;
-          Serial.println(String(IDENT) + ";DR" + String(sc) + String(sr) + ";DO");
-          lcd.setCursor(0, 3);
-          lcd.print("Close Door " + String(sc) + String(sr) + " please");
-        }
-      }
-
-      if (I2CAdress[4] == I2CDoors3)
-      {
-        if (tld3.digitalRead(posSchl[sr]) && countTBo == 0 && countTBc == 0)
-        {
-          sc = 3;
-          checkDoors = false;
-          countDoors = 0;
-          Serial.println(String(IDENT) + ";DR" + String(sc) + String(sr) + ";DO");
-          lcd.setCursor(0, 3);
-          lcd.print("Close Door " + String(sc) + String(sr) + " please");
-        }
-      }
-    }
-    if (!checkDoors)
-    {
-      if (countDoors == stepsTB * 2)
-        checkDoors = true;
-      if (countDoors < stepsTB * 2)
-        ++countDoors;
-    }
-  }
 }
 
 void ToolButCheck()
@@ -518,7 +459,7 @@ void ToolButCheck()
         countTBo = 0;
         countTBc = 0;
         tld1.digitalWrite(tastLed[sr], LOW);
-        Serial.println(String(IDENT) + ";DR" + String(nr2Open[1]) + String(nr2Open[2]) + ";CL");
+        Serial.println(String(IDENT) + ";CL" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 3);
         lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " closed      ");
         opendoors(CLOSE);
@@ -540,7 +481,7 @@ void ToolButCheck()
         countTBo = 0;
         countTBc = 0;
         tld2.digitalWrite(tastLed[nr2Open[2]], LOW);
-        Serial.println(String(IDENT) + ";DR" + String(nr2Open[1]) + String(nr2Open[2]) + ";CL");
+        Serial.println(String(IDENT) + ";CL" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 3);
         lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " closed      ");
         opendoors(CLOSE);
@@ -562,7 +503,7 @@ void ToolButCheck()
         countTBo = 0;
         countTBc = 0;
         tld3.digitalWrite(tastLed[nr2Open[2]], LOW);
-        Serial.println(String(IDENT) + ";DR" + String(nr2Open[1]) + String(nr2Open[2]) + ";CL");
+        Serial.println(String(IDENT) + ";CL" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 3);
         lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " closed      ");
         opendoors(CLOSE);
@@ -592,7 +533,7 @@ void ToolOpenDoor()
         tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
         tld1.digitalWrite(schloss[nr2Open[2]], LOW);
         countTBo = debouTBo + stepsTB;
-        Serial.println(String(IDENT) + ";DR" + String(nr2Open[1]) + String(nr2Open[2]) + ";OP");
+        Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 3);
         lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " open        ");
         tTBC.enable();
@@ -607,7 +548,7 @@ void ToolOpenDoor()
         tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
         tld2.digitalWrite(schloss[nr2Open[2]], LOW);
         countTBo = debouTBo + stepsTB;
-        Serial.println(String(IDENT) + ";DR" + String(nr2Open[1]) + String(nr2Open[2]) + ";OP");
+        Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 3);
         lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " open        ");
         tTBC.enable();
@@ -622,7 +563,7 @@ void ToolOpenDoor()
         tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
         tld3.digitalWrite(schloss[nr2Open[2]], LOW);
         countTBo = debouTBo + stepsTB;
-        Serial.println(String(IDENT) + ";DR" + String(nr2Open[1]) + String(nr2Open[2]) + ";OP");
+        Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 3);
         lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " open        ");
         tTBC.enable();
@@ -633,7 +574,8 @@ void ToolOpenDoor()
 // END OF TASKS ---------------------------------
 
 // FUNCTIONS ------------------------------------
-void noreg() {
+void noreg()
+{
   digitalWrite(SSR_POWER, LOW);
   digitalWrite(SSR_BOOZER, LOW);
   lcd.setCursor(0, 2); lcd.print("Tag not registered");
@@ -644,12 +586,13 @@ void noreg() {
   flash_led(1);
 }
 
-void opendoors(long min) {   // Turn on machine for nnn minutes
+void opendoors(long min)
+{   // Turn on machine for minutes
   onTime = true;
-  timer = timer + min * 120;
+  timer = timer + min * 240;
   Serial.println(String(IDENT) + ";opt");
   char tbs[8];
-  sprintf(tbs, "% 4d", timer / 120);
+  sprintf(tbs, "% 4d", timer / 240);
   lcd.setCursor(0, 3); lcd.print("Time left (min):"); lcd.print(tbs);
   granted();
 }
@@ -672,6 +615,7 @@ void granted()
 // Switch off machine and stop
 void doorsclosed(void)
 {
+  tTBC.disable();
   tU.disable();
   timer = 0;
   but_led(2);
