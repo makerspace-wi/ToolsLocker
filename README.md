@@ -55,4 +55,8 @@ Erst nach positiver Beurteilung würden wir die restlichen Teile bestellen, um d
 Also - Freiwillige mögen sich bei uns melden.
 
 Grober Funktionsablauf (Vorschlag):
-
+- der ToolsLocker ist an der Netzspannung angeschlossen und mit dem SYMCON System synchronisiert
+- zum 'einloggen' darf das Mitglied an keiner anderen Maschine 'eingeloggt' sein
+- RFID-Chip an Lesegerät halten
+- System prüft ob Mitglied/RFID-Chip registriert ist und bestätigt entsprechen via Display
+- 
