@@ -661,7 +661,7 @@ void noreg()
 void opendoors(long min)
 {   // Turn on machine for minutes
   onTime = true;
-  timer = timer + min * 240;
+  timer = min * 240;
   Serial.println(String(IDENT) + ";opt");
   char tbs[8];
   sprintf(tbs, "% 4d", timer / 240);
