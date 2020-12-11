@@ -22,19 +22,37 @@ Brain Storming:
 <br>
 <h1>Realisierungsvorschläge</h1> <br>
 
-[Zum Alpha 0 Blockschaltbild](doc/ToolsLockerSchaltung_A0.pdf)<br>
-[Zum Alpha 1 Schaltbild](doc/ToolsLockTreiberI2C_SCH.PDF)<br>
-Es gibt bereits ein modifiziertes Schaltbild mit reduzierter Bauelementezahl
-[Zum Alpha 2 Schaltbild](doc/ToolsLockTreiberI2CLight_SCH.PDF)
-
 03.12.2020 - Es geht weiter mit dem ToolsLocker!
 
 Erste Versuche waren bereits erfolgreich und Michael M. hat bereits den ersten Platinenentwurf für jeweils 4 Türen fertig gestellt.
 
-Hier schon al eine Idee, wie die PCBs für den ToolsLocker aussehen werden:
+Das Konzept sieht wie folgt aus:
+- RFID-Leseeinheit mit Display - wie auch schon bei den anderen Maschinen
+- 3 Interface Module die mit dem Controller über I2C-Bus kommunizieren
+- jedes Interface Module kann 4 elektrische Schlösser und 4 Drucktaster mit LED-Indikator bedienen
+- es gibt 2 Netzteile: 1 kleines für die Elektronik und ein Leistungsstarkes 12V Netzteil für die Türschlossmagneten
+- der Prozessor kommuniziert über eine XBee/ZBee Modul Funkbrücke mit unserem SYMCON-System, welches alle Überprüfungen machen wird, Freigaben erteilt und alle Vorgänge in einer Datenbank loggt
+
+Hier dazu die [System Blockschaltbilder](doc/ToolsLock_Schaltung_B0.pdf)<br>
+
+Wen es interessiert findet hier [das Schaltbild](doc//ToolsLockTreiberI2CML_SCH.PDF) der Interface Platinen<br>
+
+So wird das PCBs für den ToolsLocker aussehen:
 
 ![Bildschirmfoto 2020-12-05 um 17 13 34](https://user-images.githubusercontent.com/42463588/101286534-4fc3b400-37eb-11eb-9eb7-2b88002af4fe.png)
 
-Grober Funktionsablauf (Vorschlag):
+Status - heute Mittwoch der 09.12.2020:
 
+- Laborversuchsaufbau mit einem Schloss und einem Taster wurde bereits aufgebaut und erfolgreich getestet.
+- Layout PCB Interface Platine ist abgeschlossen - 5 Platinen sind bestellt und bereits auf dem Weg aus China.
+
+
+Nächste Schritte:<br>
+Es ist nun die Zeit gekommen, wo wir Unterstützung von 1 bis 2 zuverlässigen Mechanikern gebrauchen könnten. Es geht darum, zunächst für eine Tür das ausgewählte Schloss und den LED-Taster zu installieren, um am eigentlichen Objekt die Machbarkeit zu demonstrieren und mit der Verwaltungssoftware beginnen zu können.
+
+Erst nach positiver Beurteilung würden wir die restlichen Teile bestellen, um den Aufbau voran zu treiben.
+
+Also - Freiwillige mögen sich bei uns melden.
+
+Grober Funktionsablauf (Vorschlag):
 
