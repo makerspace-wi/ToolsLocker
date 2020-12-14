@@ -16,10 +16,10 @@
   'Ident;CL;drxx'    - Ident; door closed with number xx (colum|row) ---> "dr34"
   'Ident;off'        - Ident reporting nobody logged in
 
-  Commands from Raspi
+  Commands from Raspi (Commands send from raspi, are allways inspected and if known, executed!!!)
   'time'      - format time33.33.3333 33:33:33
   'noreg'     - RFID-Chip not registed
-  'dotxx'     - doors can be opened during next xx min "odt15"
+  'dotxx'     - doors can be opened during time xx min "odt15"
   'odiyy'     - open door immediately with number yy (colum|row) ---> "odi34"
   'ondzz'     - open next door with number zz  (colum|row) ---> "ond34"
   'tllo'      - from toollocker log all off
