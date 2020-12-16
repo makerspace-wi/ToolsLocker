@@ -61,7 +61,7 @@ Grober Funktionsablauf (Vorschlag):
 - System prüft ob Mitglied/RFID-Chip registriert ist und bestätigt entsprechen via Display
 - 
 
-16.12.2020 - Post aus China
+<h2>16.12.2020 - Post aus China</h2>
 
 ![IMG_7514](https://user-images.githubusercontent.com/42463588/102316586-81204a80-3f76-11eb-94c7-06950fffdf84.jpg)
 
