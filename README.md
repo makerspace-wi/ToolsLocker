@@ -60,3 +60,9 @@ Grober Funktionsablauf (Vorschlag):
 - RFID-Chip an Lesegerät halten
 - System prüft ob Mitglied/RFID-Chip registriert ist und bestätigt entsprechen via Display
 - 
+
+16.12.2020 - Post aus China
+
+![IMG_7514](https://user-images.githubusercontent.com/42463588/102316586-81204a80-3f76-11eb-94c7-06950fffdf84.jpg)
+
+![IMG_7515](https://user-images.githubusercontent.com/42463588/102316639-9ac19200-3f76-11eb-9788-50943ebae297.jpg)
