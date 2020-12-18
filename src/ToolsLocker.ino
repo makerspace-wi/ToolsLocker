@@ -11,7 +11,8 @@
 
   'Ident;POR;Vx.x.x' - machine power on reset and sw version (Ident;por;Vx.x.x)
   'card;nn...'       - uid_2 from reader
-  'Ident;opt'        - Ident is startet and time is on
+  'Ident;ont'        - Ident is startet and time is on
+  'Ident;WO;drxx'    - Ident; want open door with number xx? (colum|row) ---> "dr34"
   'Ident;OP;drxx'    - Ident; door opened with number xx (colum|row) ---> "dr34"
   'Ident;CL;drxx'    - Ident; door closed with number xx (colum|row) ---> "dr34"
   'Ident;off'        - Ident reporting nobody logged in
@@ -19,9 +20,8 @@
   Commands from Raspi (Commands send from raspi, are allways inspected and if known, executed!!!)
   'time'      - format time33.33.3333 33:33:33
   'noreg'     - RFID-Chip not registed
-  'dotxx'     - doors can be opened during time xx min "odt15"
+  'ontxx'     - on to open doors for time xx min "ont15"
   'odiyy'     - open door immediately with number yy (colum|row) ---> "odi34"
-  'ondzz'     - open next door with number zz  (colum|row) ---> "ond34"
   'tllo'      - from toollocker log all off
   'r3t...'    - display text in row 3 "r3tabcde12345", max 20
   'r4t...'    - display text in row 4 "r4tabcde12345", max 20
@@ -29,7 +29,7 @@
   last change: 11.12.2020 by Michael Muehl
   changed: beta version for 12 locks, tested one lock and button!!!!!!!!!!!!!
 */
-#define Version "0.9.4" // (Test =0.9.x ==> 0.9.5)
+#define Version "0.9.5" // (Test =0.9.x ==> 0.9.6)
 
 #include <Arduino.h>
 #include <TaskScheduler.h>
@@ -376,26 +376,23 @@ void DispOFF() {
 void ToolButCheck()
 {
   digitalWrite(BUSError, HIGH);
-  if (nr2Open[0] == 0 || (nr2Open[0] >= 11 && nr2Open[0] <= 34))
+  if (nr2Open[0] == 0)
   {
     for (sr = 1; sr < 5; sr++)
     {
       if (I2CAdress[2] == I2CDoors1)
       { // if channel 1 is a live
         sc = 1;
-        if (((nr2Open[1] == sc && nr2Open[2] == sr) || !tld1.digitalRead(butTast[sr])) && !tld1.digitalRead(posLock[sr]) && countTBo == debouTBo)
+        if (!tld1.digitalRead(butTast[sr]) && !tld1.digitalRead(posLock[sr]) && countTBo == debouTBo)
         {
-          dooropend = true;
-          tTOD.enable();
-          tTOD.restartDelayed(100);
-          tld1.digitalWrite(schloss[sr], HIGH);
-          timer = 0;
-          onTime = false;
-          but_led(3);
-          flash_led(4);
-          nr2Open[0] = -1;
+          nr2Open[0] = -5;
           nr2Open[1] = sc;
           nr2Open[2] = sr;
+          Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
+          lcd.setCursor(0, 2);
+          lcd.print("Want Open Door " + String(nr2Open[1]) + String(nr2Open[2]) + " ");
+          lcd.setCursor(0, 3);
+          lcd.print("Wait for request   ");
         }
         if (((nr2Open[1] == 3 && nr2Open[2] == sr) || !tld1.digitalRead(butTast[sr])) && countTBc == 0 && countTBo < debouTBo)
         {
@@ -406,19 +403,16 @@ void ToolButCheck()
       if (I2CAdress[3] == I2CDoors2)
       { // if channel 2 is a live
         sc = 2;
-        if (((nr2Open[1] == sc && nr2Open[2] == sr) || !tld2.digitalRead(butTast[sr])) && !tld2.digitalRead(posLock[sr]) && countTBo == debouTBo)
+        if (!tld2.digitalRead(butTast[sr]) && !tld2.digitalRead(posLock[sr]) && countTBo == debouTBo)
         {
-          dooropend = true;
-          tTOD.enable();
-          tTOD.restartDelayed(100);
-          tld2.digitalWrite(schloss[sr], HIGH);
-          timer = 0;
-          onTime = false;
-          but_led(3);
-          flash_led(4);
-          nr2Open[0] = -1;
+          nr2Open[0] = -5;
           nr2Open[1] = sc;
           nr2Open[2] = sr;
+          Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
+          lcd.setCursor(0, 2);
+          lcd.print("Want Open Door " + String(nr2Open[1]) + String(nr2Open[2]) + " ");
+          lcd.setCursor(0, 3);
+          lcd.print("Wait for request   ");
         }
         if (((nr2Open[1] == 3 && nr2Open[2] == sr) || !tld2.digitalRead(butTast[sr])) && countTBc == 0 && countTBo < debouTBo)
         {
@@ -429,20 +423,16 @@ void ToolButCheck()
       if (I2CAdress[4] == I2CDoors3)
       { // if channel 3 is a live
         sc = 3;
-        if (((nr2Open[1] == sc && nr2Open[2] == sr) || !tld3.digitalRead(butTast[sr])) && !tld3.digitalRead(posLock[sr]) && countTBo == debouTBo)
+        if (!tld3.digitalRead(butTast[sr]) && !tld3.digitalRead(posLock[sr]) && countTBo == debouTBo)
         {
-          dooropend = true;
-          tld3.digitalWrite(schloss[sr], HIGH);
-          timer = 0;
-          onTime = false;
-          but_led(3);
-          flash_led(4);
-          nr2Open[0] = -1;
+          nr2Open[0] = -5;
           nr2Open[1] = sc;
           nr2Open[2] = sr;
-          tTBC.disable();
-          tTOD.enable();
-          tTOD.restartDelayed(100);
+          Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
+          lcd.setCursor(0, 2);
+          lcd.print("Want Open Door " + String(nr2Open[1]) + String(nr2Open[2]) + " ");
+          lcd.setCursor(0, 3);
+          lcd.print("Wait for request   ");
         }
         if (((nr2Open[1] == 3 && nr2Open[2] == sr) || !tld3.digitalRead(butTast[sr])) && countTBc == 0 && countTBo < debouTBo)
         {
@@ -593,7 +583,7 @@ void ToolOpenDoor()
   {
     if (nr2Open[1] == 1)
     {
-      if (tld1.digitalRead(posLock[nr2Open[2]]) && countTBo == debouTBo)
+      if (tld1.digitalRead(posLock[nr2Open[2]]))
       {
         tTOD.disable();
         tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
@@ -610,7 +600,7 @@ void ToolOpenDoor()
 
     if (nr2Open[1] == 2)
     {
-      if (tld2.digitalRead(posLock[nr2Open[2]]) && countTBo == debouTBo)
+      if (tld2.digitalRead(posLock[nr2Open[2]]))
       {
         tTOD.disable();
         tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
@@ -627,7 +617,7 @@ void ToolOpenDoor()
 
     if (nr2Open[1] == 3)
     {
-      if (tld3.digitalRead(posLock[nr2Open[2]]) && countTBo == debouTBo)
+      if (tld3.digitalRead(posLock[nr2Open[2]]))
       {
         tTOD.disable();
         tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
@@ -662,7 +652,7 @@ void opendoors(long min)
 {   // Turn on machine for minutes
   onTime = true;
   timer = min * 240;
-  Serial.println(String(IDENT) + ";opt");
+  Serial.println(String(IDENT) + ";ont");
   char tbs[8];
   sprintf(tbs, "% 4d", timer / 240);
   lcd.setCursor(0, 3); lcd.print("Time left (min):"); lcd.print(tbs);
@@ -694,6 +684,60 @@ void granted()
   tTBC.enable();
 }
 
+void dooropened(void)
+{
+  if (nr2Open[1] == 1)
+  {
+    if (!tld1.digitalRead(posLock[nr2Open[2]]))
+    {
+      dooropend = true;
+      tTBC.disable();
+      tld1.digitalWrite(schloss[nr2Open[2]], HIGH);
+      timer = 0;
+      onTime = false;
+      but_led(3);
+      flash_led(4);
+      nr2Open[0] = -1;
+      tTOD.enable();
+      tTOD.restartDelayed(100);
+    }
+  }
+
+  if (nr2Open[1] == 2)
+  {
+    if (!tld2.digitalRead(posLock[nr2Open[2]]))
+    {
+      dooropend = true;
+      tTBC.disable();
+      tld2.digitalWrite(schloss[nr2Open[2]], HIGH);
+      timer = 0;
+      onTime = false;
+      but_led(3);
+      flash_led(4);
+      nr2Open[0] = -1;
+      tTOD.enable();
+      tTOD.restartDelayed(100);
+    }
+  }
+
+  if (nr2Open[1] == 3)
+  {
+    if (!tld3.digitalRead(posLock[nr2Open[2]]))
+    {
+      dooropend = true;
+      tTBC.disable();
+      tld3.digitalWrite(schloss[nr2Open[2]], HIGH);
+      timer = 0;
+      onTime = false;
+      but_led(3);
+      flash_led(4);
+      nr2Open[0] = -1;
+      tTOD.enable();
+      tTOD.restartDelayed(100);
+    }
+  }
+}
+
 // Switch off machine and stop
 void doorsclosed(void)
 {
@@ -707,12 +751,13 @@ void doorsclosed(void)
   tDF.restartDelayed(TASK_SECOND * 30);
   BadSound();
   flash_led(1);
-  tM.enable();  // added by DieterH on 18.10.2017
+  tM.enable(); // added by DieterH on 18.10.2017
   countTBo = 0;
   countTBc = 0;
   // Display change
   lcd.clear();
-  lcd.setCursor(0, 0); lcd.print("System shut down at");
+  lcd.setCursor(0, 0);
+  lcd.print("System shut down at");
 
 }
 
@@ -838,7 +883,7 @@ void evalSerialData()
     noreg();  // changed by D. Haude on 18.10.2017
   }
 
-  if (inStr.startsWith("DOT") && inStr.length() >= 4 && inStr.length() < 6)
+  if (inStr.startsWith("ONT") && inStr.length() >= 4 && inStr.length() < 6)
   {
     nextrun = false;
     nr2Open[0] = 0;
@@ -849,25 +894,10 @@ void evalSerialData()
   if (inStr.startsWith("ODI") && inStr.length() >= 4 && inStr.length() < 6)
   {
     nextrun = false;
-    nr2Open[0] = inStr.substring(3).toInt();
-    if (nr2Open[0] >= 11 && nr2Open[0] <= 34)
-    {
-      nr2Open[1] = inStr.substring(3, 4).toInt();
-      nr2Open[2] = inStr.substring(4, 5).toInt();
-      opendoors(CLOSE);
-    }
-  }
-
-  if (inStr.startsWith("OND") && inStr.length() >= 4 && inStr.length() < 6)
-  {
-    nextrun = false;
-    nr2Open[0] = 55;
-    if (nr2Open[0] == 55)
-    {
-      nr2Open[1] = inStr.substring(3, 4).toInt();
-      nr2Open[2] = inStr.substring(4, 5).toInt();
-      opendoors(CLOSE);
-    }
+    nr2Open[0] = 11;
+    nr2Open[1] = inStr.substring(3, 4).toInt();
+    nr2Open[2] = inStr.substring(4, 5).toInt();
+    dooropened();
   }
 
   if (inStr.startsWith("TLLO") && inStr.length() == 4)
