@@ -15,6 +15,7 @@
   'Ident;WO;drxx'    - Ident; want open door with number xx? (colum|row) ---> "dr34"
   'Ident;OP;drxx'    - Ident; door opened with number xx (colum|row) ---> "dr34"
   'Ident;CL;drxx'    - Ident; door closed with number xx (colum|row) ---> "dr34"
+  'Ident;ER;drxx'    - Ident; door has not opened with number xx (colum|row) ---> "dr34"
   'Ident;off'        - Ident reporting nobody logged in
 
   Commands from Raspi (Commands send from raspi, are allways inspected and if known, executed!!!)
@@ -29,7 +30,7 @@
   last change: 11.12.2020 by Michael Muehl
   changed: beta version for 12 locks, tested one lock and button!!!!!!!!!!!!!
 */
-#define Version "0.9.5" // (Test =0.9.x ==> 0.9.6)
+#define Version "0.9.6" // (Test =0.9.x ==> 0.9.7)
 
 #include <Arduino.h>
 #include <TaskScheduler.h>
@@ -441,71 +442,6 @@ void ToolButCheck()
       }
     }
   }
-  else if (nr2Open[0] == 55)
-  {
-    if (nr2Open[1] == 1)
-    {
-      tld1.digitalWrite(tastLed[nr2Open[2]], !tld1.digitalRead(tastLed[nr2Open[2]]));
-      if (!tld1.digitalRead(butTast[nr2Open[2]]) && !tld1.digitalRead(posLock[nr2Open[2]]) && countTBo == debouTBo)
-      {
-        dooropend = true;
-        tTOD.enable();
-        tTOD.restartDelayed(100);
-        tld1.digitalWrite(schloss[nr2Open[2]], HIGH);
-        timer = 0;
-        onTime = false;
-        but_led(3);
-        flash_led(4);
-        nr2Open[0] = -1;
-      }
-      if (!tld1.digitalRead(butTast[nr2Open[2]]) && countTBc == 0 && countTBo < debouTBo)
-      {
-        ++countTBo;
-      }
-    }
-
-    if (nr2Open[1] == 2)
-    {
-      tld2.digitalWrite(tastLed[nr2Open[2]], !tld2.digitalRead(tastLed[nr2Open[2]]));
-      if (!tld2.digitalRead(butTast[nr2Open[2]]) && !tld2.digitalRead(posLock[nr2Open[2]]) && countTBo == debouTBo)
-      {
-        dooropend = true;
-        tTOD.enable();
-        tTOD.restartDelayed(100);
-        tld2.digitalWrite(schloss[nr2Open[2]], HIGH);
-        timer = 0;
-        onTime = false;
-        but_led(3);
-        flash_led(4);
-        nr2Open[0] = -1;
-      }
-      if (!tld2.digitalRead(butTast[nr2Open[2]]) && countTBc == 0 && countTBo < debouTBo)
-      {
-        ++countTBo;
-      }
-    }
-
-    if (nr2Open[1] == 3)
-    {
-      tld3.digitalWrite(tastLed[nr2Open[2]], !tld3.digitalRead(tastLed[nr2Open[2]]));
-      if (!tld3.digitalRead(butTast[nr2Open[2]]) && !tld3.digitalRead(posLock[nr2Open[2]]) && countTBo == debouTBo)
-      {
-        dooropend = true;
-        tTOD.enable();
-        tTOD.restartDelayed(100);
-        tld3.digitalWrite(schloss[nr2Open[2]], HIGH);
-        timer = 0;
-        onTime = false;
-        but_led(3);
-        flash_led(4);
-        nr2Open[0] = -1;
-      }
-      if (!tld3.digitalRead(butTast[nr2Open[2]]) && countTBc == 0 && countTBo < debouTBo)
-      {
-        ++countTBo;
-      }
-    }
-  }
   else if (nr2Open[0] >= -1)
   {
     if (nr2Open[1] == 1)
@@ -586,8 +522,8 @@ void ToolOpenDoor()
       if (tld1.digitalRead(posLock[nr2Open[2]]))
       {
         tTOD.disable();
-        tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
         tld1.digitalWrite(schloss[nr2Open[2]], LOW);
+        tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
         countTBo = debouTBo + stepsTB;
         Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 2);
@@ -595,6 +531,32 @@ void ToolOpenDoor()
         lcd.setCursor(0, 3);
         lcd.print("Please close door   ");
         tTBC.enable();
+      }
+      else
+      {
+        tld1.digitalWrite(schloss[nr2Open[2]], LOW);
+        Serial.println(String(IDENT) + ";ER" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
+        lcd.setCursor(0, 2);
+        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " not opened  ");
+        lcd.setCursor(0, 3);
+        lcd.print("Please send message ");
+        tTOD.restartDelayed(500);
+        ++countTBo;
+        if (countTBo % 2)
+        {
+          tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
+        }
+        else
+        {
+          tld1.digitalWrite(tastLed[nr2Open[2]], LOW);
+        }
+        if (countTBo >= 30)
+        {
+          tld1.digitalWrite(tastLed[nr2Open[2]], LOW);
+          countTBo = debouTBo + stepsTB;
+          tTOD.disable();
+          tTBC.enable();
+        }
       }
     }
 
@@ -603,8 +565,8 @@ void ToolOpenDoor()
       if (tld2.digitalRead(posLock[nr2Open[2]]))
       {
         tTOD.disable();
-        tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
         tld2.digitalWrite(schloss[nr2Open[2]], LOW);
+        tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
         countTBo = debouTBo + stepsTB;
         Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 2);
@@ -613,6 +575,32 @@ void ToolOpenDoor()
         lcd.print("Please close door   ");
         tTBC.enable();
       }
+      else
+      {
+        tld2.digitalWrite(schloss[nr2Open[2]], LOW);
+        Serial.println(String(IDENT) + ";ER" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
+        lcd.setCursor(0, 2);
+        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " not opened  ");
+        lcd.setCursor(0, 3);
+        lcd.print("Please send message ");
+        tTOD.restartDelayed(500);
+        ++countTBo;
+        if (countTBo % 2)
+        {
+          tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
+        }
+        else
+        {
+          tld2.digitalWrite(tastLed[nr2Open[2]], LOW);
+        }
+        if (countTBo >= 30)
+        {
+          tld2.digitalWrite(tastLed[nr2Open[2]], LOW);
+          countTBo = debouTBo + stepsTB;
+          tTOD.disable();
+          tTBC.enable();
+        }
+      }
     }
 
     if (nr2Open[1] == 3)
@@ -620,8 +608,8 @@ void ToolOpenDoor()
       if (tld3.digitalRead(posLock[nr2Open[2]]))
       {
         tTOD.disable();
-        tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
         tld3.digitalWrite(schloss[nr2Open[2]], LOW);
+        tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
         countTBo = debouTBo + stepsTB;
         Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         lcd.setCursor(0, 2);
@@ -629,6 +617,33 @@ void ToolOpenDoor()
         lcd.setCursor(0, 3);
         lcd.print("Please close door   ");
         tTBC.enable();
+      }
+      else
+      {
+        tld3.digitalWrite(schloss[nr2Open[2]], LOW);
+        Serial.println(String(IDENT) + ";ER" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
+        lcd.setCursor(0, 2);
+        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " not opened  ");
+        lcd.setCursor(0, 3);
+        lcd.print("Please send message ");
+        tTOD.restartDelayed(500);
+        ++countTBo;
+        if (countTBo % 2)
+        {
+          tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
+        }
+        else
+        {
+          tld3.digitalWrite(tastLed[nr2Open[2]], LOW);
+        }
+        
+        if (countTBo >= 30)
+        {
+          tld3.digitalWrite(tastLed[nr2Open[2]], LOW);
+          countTBo = debouTBo + stepsTB;
+          tTOD.disable();
+          tTBC.enable();
+        }
       }
     }
   }
