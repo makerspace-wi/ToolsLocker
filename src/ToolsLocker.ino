@@ -24,17 +24,21 @@
   'ontxx'     - on to open doors for time xx min "ont15"
   'odiyy'     - open door immediately with number yy (colum|row) ---> "odi34"
   'loiyy'     - led on immediately with number yy
+  'loall'     - leds on all
   'lbiyy'     - led blinking immediately with number yy
-  'sbtzzz'    - set blink time between zzz = 50ms ---> <1000ms (default = 100ms)
   'lfiyy'     - led off immediately with number yy
+  'lfall'     - leds off all
   'tllo'      - from toollocker log all off
+  'buzon'     - buzzer extern on
+  'buzof'     - buzzer extern off
+  'sbtzzz'    - set blink time between zzz = 50ms ---> <1000ms (default = 100ms)
   'r3t...'    - display text in row 3 "r3tabcde12345", max 20
   'r4t...'    - display text in row 4 "r4tabcde12345", max 20
 
-  last change: 11.12.2020 by Michael Muehl
-  changed: beta version for 12 locks, tested one lock and button!!!!!!!!!!!!!
+  last change: 05.01.2021 by Michael Muehl
+  changed: toollocker now with 12 (10) parts, add all leds on / off and Buzzer external
 */
-#define Version "0.9.7" // (Test =0.9.x ==> 0.9.8)
+#define Version "0.9.9" // (Test =1.0.x ==> 1.0.0)
 
 #include <Arduino.h>
 #include <TaskScheduler.h>
@@ -52,7 +56,7 @@
 // Machine Control (ext)
 #define currMotor   A0  // Motor current (not used)
 #define SSR_POWER   A2  // SSR POWER on / off  (Schlösser)
-#define SSR_BOOZER  A3  // SSR Boozer on / off  (Zentral Boozer) [not used]
+#define SSR_BUZZER  A3  // SSR Buzzer on / off  (Zentral Buzzer)
 
 #define BUSError     8  // Bus error
 
@@ -199,8 +203,8 @@ void setup()
     I2CTransmissionResult = Wire.endTransmission();
     if (I2CTransmissionResult == 0)
     {
+      I2CAdress[I2CFound] = sr;
       I2CFound++;
-      I2CAdress[sr] = sr;
     }
   }
 
@@ -208,11 +212,11 @@ void setup()
   if (I2CFound >= 1)
   {
     lcd.begin(20, 4);        // initialize the LCD
-    if (I2CAdress[2] == I2CDoors1)
+    if (I2CAdress[1] == I2CDoors1)
       tld1.begin(I2CDoors1); // used address (2)1
-    if (I2CAdress[3] == I2CDoors2)
+    if (I2CAdress[2] == I2CDoors2)
       tld2.begin(I2CDoors2); // used address (2)2
-    if (I2CAdress[4] == I2CDoors3)
+    if (I2CAdress[3] == I2CDoors3)
       tld3.begin(I2CDoors3); // used address (2)4
 
     SPI.begin();             // SPI
@@ -223,14 +227,42 @@ void setup()
     // IO MODES
     pinMode(BUSError, OUTPUT);
     pinMode(SSR_POWER, OUTPUT);
-    pinMode(SSR_BOOZER, OUTPUT);
+    pinMode(SSR_BUZZER, OUTPUT);
 
     // Set default values
     digitalWrite(BUSError, HIGH); // turn the LED ON (init start)
     digitalWrite(SSR_POWER, LOW);
-    digitalWrite(SSR_BOOZER, LOW);
+    digitalWrite(SSR_BUZZER, LOW);
 
-    if (I2CAdress[4] == I2CDoors3)
+    if (I2CAdress[1] == I2CDoors1)
+    {
+      for (sr = 1; sr < 5; sr++)
+      {
+        tld1.pinMode(schloss[sr], OUTPUT);
+        tld1.pinMode(tastLed[sr], OUTPUT);
+        tld1.pinMode(posLock[sr], INPUT);
+        tld1.pinMode(butTast[sr], INPUT); // (int A later?)
+
+        tld1.digitalWrite(schloss[sr], LOW);
+        tld1.digitalWrite(tastLed[sr], LOW);
+      }
+    }
+
+    if (I2CAdress[2] == I2CDoors2)
+    {
+      for (sr = 1; sr < 5; sr++)
+      {
+        tld2.pinMode(schloss[sr], OUTPUT);
+        tld2.pinMode(tastLed[sr], OUTPUT);
+        tld2.pinMode(posLock[sr], INPUT);
+        tld2.pinMode(butTast[sr], INPUT); // (int A later?)
+
+        tld2.digitalWrite(schloss[sr], LOW);
+        tld2.digitalWrite(tastLed[sr], LOW);
+      }
+    }
+
+    if (I2CAdress[3] == I2CDoors3)
     {
       for (sr = 1; sr < 5;sr++)
       {
@@ -419,12 +451,11 @@ void ToolDoorsLed()
 
 void ToolButCheck()
 {
-  digitalWrite(BUSError, HIGH);
   if (nr2Open[0] == 0)
   {
     for (sr = 1; sr < 5; sr++)
     {
-      if (I2CAdress[2] == I2CDoors1)
+      if (I2CAdress[1] == I2CDoors1)
       { // if channel 1 is a live
         sc = 1;
         if (!tld1.digitalRead(butTast[sr]) && !tld1.digitalRead(posLock[sr]) && countTBo == debouTBo)
@@ -434,10 +465,6 @@ void ToolButCheck()
           nr2Open[1] = sc;
           nr2Open[2] = sr;
           Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-          lcd.setCursor(0, 2);
-          lcd.print("Want Open Door " + String(nr2Open[1]) + String(nr2Open[2]) + " ");
-          lcd.setCursor(0, 3);
-          lcd.print("Wait for request   ");
         }
         if (((nr2Open[1] == 3 && nr2Open[2] == sr) || !tld1.digitalRead(butTast[sr])) && countTBc == 0 && countTBo < debouTBo)
         {
@@ -445,7 +472,7 @@ void ToolButCheck()
         }
       }
 
-      if (I2CAdress[3] == I2CDoors2)
+      if (I2CAdress[2] == I2CDoors2)
       { // if channel 2 is a live
         sc = 2;
         if (!tld2.digitalRead(butTast[sr]) && !tld2.digitalRead(posLock[sr]) && countTBo == debouTBo)
@@ -455,10 +482,6 @@ void ToolButCheck()
           nr2Open[1] = sc;
           nr2Open[2] = sr;
           Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-          lcd.setCursor(0, 2);
-          lcd.print("Want Open Door " + String(nr2Open[1]) + String(nr2Open[2]) + " ");
-          lcd.setCursor(0, 3);
-          lcd.print("Wait for request   ");
         }
         if (((nr2Open[1] == 3 && nr2Open[2] == sr) || !tld2.digitalRead(butTast[sr])) && countTBc == 0 && countTBo < debouTBo)
         {
@@ -466,7 +489,7 @@ void ToolButCheck()
         }
       }
 
-      if (I2CAdress[4] == I2CDoors3)
+      if (I2CAdress[3] == I2CDoors3)
       { // if channel 3 is a live
         sc = 3;
         if (!tld3.digitalRead(butTast[sr]) && !tld3.digitalRead(posLock[sr]) && countTBo == debouTBo)
@@ -476,10 +499,6 @@ void ToolButCheck()
           nr2Open[1] = sc;
           nr2Open[2] = sr;
           Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-          lcd.setCursor(0, 2);
-          lcd.print("Want Open Door " + String(nr2Open[1]) + String(nr2Open[2]) + " ");
-          lcd.setCursor(0, 3);
-          lcd.print("Wait for request   ");
         }
         if (((nr2Open[1] == 3 && nr2Open[2] == sr) || !tld3.digitalRead(butTast[sr])) && countTBc == 0 && countTBo < debouTBo)
         {
@@ -498,8 +517,6 @@ void ToolButCheck()
         countTBc = 0;
         tld1.digitalWrite(tastLed[sr], LOW);
         Serial.println(String(IDENT) + ";CL" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-        lcd.setCursor(0, 2);
-        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " closed      ");
         opendoors(CLOSE);
         dooropend = false;
         nr2Open[0] = 0;
@@ -520,8 +537,6 @@ void ToolButCheck()
         countTBc = 0;
         tld2.digitalWrite(tastLed[nr2Open[2]], LOW);
         Serial.println(String(IDENT) + ";CL" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-        lcd.setCursor(0, 2);
-        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " closed      ");
         opendoors(CLOSE);
         dooropend = false;
         nr2Open[0] = 0;
@@ -542,8 +557,6 @@ void ToolButCheck()
         countTBc = 0;
         tld3.digitalWrite(tastLed[nr2Open[2]], LOW);
         Serial.println(String(IDENT) + ";CL" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-        lcd.setCursor(0, 2);
-        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " closed      ");
         opendoors(CLOSE);
         dooropend = false;
         nr2Open[0] = 0;
@@ -556,7 +569,6 @@ void ToolButCheck()
       }
     }
   }
-  digitalWrite(BUSError, LOW);
 }
 
 void ToolOpenDoor()
@@ -571,10 +583,6 @@ void ToolOpenDoor()
         tld1.digitalWrite(schloss[nr2Open[2]], LOW);
         countTBo = debouTBo + stepsTB;
         Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-        lcd.setCursor(0, 2);
-        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " opened      ");
-        lcd.setCursor(0, 3);
-        lcd.print("Please close door   ");
         tTBC.enable();
       }
       else
@@ -588,8 +596,6 @@ void ToolOpenDoor()
           tld1.digitalWrite(schloss[nr2Open[2]], HIGH);
           tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
           Serial.println(String(IDENT) + ";ER" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-          lcd.setCursor(0, 2);
-          lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " opened???   ");
         }
         if (countTBo >= 10 * 10)
         {
@@ -611,10 +617,6 @@ void ToolOpenDoor()
         tld2.digitalWrite(schloss[nr2Open[2]], LOW);
         countTBo = debouTBo + stepsTB;
         Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-        lcd.setCursor(0, 2);
-        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " opened      ");
-        lcd.setCursor(0, 3);
-        lcd.print("Please close door   ");
         tTBC.enable();
       }
       else
@@ -628,8 +630,6 @@ void ToolOpenDoor()
           tld2.digitalWrite(schloss[nr2Open[2]], HIGH);
           tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
           Serial.println(String(IDENT) + ";ER" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-          lcd.setCursor(0, 2);
-          lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " opened???   ");
         }
         if (countTBo >= 10 * 10)
         {
@@ -650,10 +650,6 @@ void ToolOpenDoor()
         tld3.digitalWrite(schloss[nr2Open[2]], LOW);
         countTBo = debouTBo + stepsTB;
         Serial.println(String(IDENT) + ";OP" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-        lcd.setCursor(0, 2);
-        lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " opened      ");
-        lcd.setCursor(0, 3);
-        lcd.print("Please close door   ");
         tTBC.enable();
       }
       else
@@ -667,8 +663,6 @@ void ToolOpenDoor()
           tld3.digitalWrite(schloss[nr2Open[2]], HIGH);
           tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
           Serial.println(String(IDENT) + ";ER" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
-          lcd.setCursor(0, 2);
-          lcd.print("Door " + String(nr2Open[1]) + String(nr2Open[2]) + " opened???   ");
         }
         if (countTBo >= 10 * 10)
         {
@@ -688,7 +682,7 @@ void ToolOpenDoor()
 void noreg()
 {
   digitalWrite(SSR_POWER, LOW);
-  digitalWrite(SSR_BOOZER, LOW);
+  digitalWrite(SSR_BUZZER, LOW);
   lcd.setCursor(0, 2); lcd.print("Tag not registered");
   lcd.setCursor(0, 3); lcd.print("===> No access! <===");
   tM.enable();
@@ -717,17 +711,8 @@ void granted()
   flash_led(1);
   GoodSound();
   digitalWrite(SSR_POWER, HIGH);
-  if (!nextrun)
-  {
-    lcd.setCursor(0, 2);
-    lcd.print("Access granted      ");
-  }
-  else
-  {
-    lcd.setCursor(0, 2);
-    lcd.print("Please open a door   ");
-  }
-  nextrun = true;
+  lcd.setCursor(0, 2);
+  lcd.print("Access granted      ");
   tR.disable();
   tU.enable();
   tTBC.enable();
@@ -799,7 +784,7 @@ void doorsclosed(void)
   timer = 0;
   but_led(2);
   digitalWrite(SSR_POWER, LOW);
-  digitalWrite(SSR_BOOZER, LOW);
+  digitalWrite(SSR_BUZZER, LOW);
   Serial.println(String(IDENT) + ";off");
   tDF.restartDelayed(TASK_SECOND * 30);
   BadSound();
@@ -963,6 +948,25 @@ void evalSerialData()
     ToolDoorsLed();
   }
 
+  if (inStr.startsWith("LOALL") && inStr.length() == 5)
+  {
+    tTDL.disable();
+    tld1.digitalWrite(tastLed[1], HIGH);
+    tld1.digitalWrite(tastLed[2], HIGH);
+    tld1.digitalWrite(tastLed[3], HIGH);
+    tld1.digitalWrite(tastLed[4], HIGH);
+
+    tld2.digitalWrite(tastLed[1], HIGH);
+    tld2.digitalWrite(tastLed[2], HIGH);
+    tld2.digitalWrite(tastLed[3], HIGH);
+    tld2.digitalWrite(tastLed[4], HIGH);
+
+    tld3.digitalWrite(tastLed[1], HIGH);
+    tld3.digitalWrite(tastLed[2], HIGH);
+    tld3.digitalWrite(tastLed[3], HIGH);
+    tld3.digitalWrite(tastLed[4], HIGH);
+  }
+
   if (inStr.startsWith("LBI") && inStr.length() >= 4 && inStr.length() < 6)
   {
     nr2Open[1] = inStr.substring(3, 4).toInt();
@@ -991,6 +995,40 @@ void evalSerialData()
     }
   }
 
+  if (inStr.startsWith("LFALL") && inStr.length() == 5)
+  {
+    tTDL.disable();
+    tld1.digitalWrite(tastLed[1], LOW);
+    tld1.digitalWrite(tastLed[2], LOW);
+    tld1.digitalWrite(tastLed[3], LOW);
+    tld1.digitalWrite(tastLed[4], LOW);
+
+    tld2.digitalWrite(tastLed[1], LOW);
+    tld2.digitalWrite(tastLed[2], LOW);
+    tld2.digitalWrite(tastLed[3], LOW);
+    tld2.digitalWrite(tastLed[4], LOW);
+
+    tld3.digitalWrite(tastLed[1], LOW);
+    tld3.digitalWrite(tastLed[2], LOW);
+    tld3.digitalWrite(tastLed[3], LOW);
+    tld3.digitalWrite(tastLed[4], LOW);
+  }
+
+  if (inStr.startsWith("TLLO") && inStr.length() == 4)
+  {
+    doorsclosed(); // Doors all closed
+  }
+
+  if (inStr.startsWith("BUZON") && inStr.length() == 5)
+  {
+    digitalWrite(SSR_BUZZER, HIGH);
+  }
+
+  if (inStr.startsWith("BUZOF") && inStr.length() == 5)
+  {
+    digitalWrite(SSR_BUZZER, LOW);
+  }
+
   if (inStr.startsWith("SBT") && inStr.length() >= 4 && inStr.length() < 7)
   {
     tTDL.disable();
@@ -998,14 +1036,9 @@ void evalSerialData()
     {
       tTDL.setInterval(inStr.substring(3, 6).toInt());
     }
-   }
-
-  if (inStr.startsWith("TLLO") && inStr.length() == 4)
-  {
-    doorsclosed(); // Doors all closed
   }
 
-  if (inStr.substring(0, 3) == "R3T" && inStr.length() >3)
+  if (inStr.substring(0, 3) == "R3T" && inStr.length() > 3)
   {  // print to LCD row 3
     inStr.concat("                   ");     // add blanks to string
     lcd.setCursor(0,2);
