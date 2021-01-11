@@ -515,7 +515,7 @@ void ToolButCheck()
       {
         countTBo = 0;
         countTBc = 0;
-        tld1.digitalWrite(tastLed[sr], LOW);
+        tld1.digitalWrite(tastLed[nr2Open[2]], LOW);
         Serial.println(String(IDENT) + ";CL" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         opendoors(CLOSE);
         dooropend = false;
