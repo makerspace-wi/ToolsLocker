@@ -15,7 +15,9 @@
   'Ident;WO;drxx'    - Ident; want open door with number xx? (colum|row) ---> "dr34"
   'Ident;OP;drxx'    - Ident; door opened with number xx (colum|row) ---> "dr34"
   'Ident;CL;drxx'    - Ident; door closed with number xx (colum|row) ---> "dr34"
-  'Ident;ER;drxx'    - Ident; door has not opened with number xx (colum|row) ---> "dr34"
+  'Ident;ER;drxx'    - Ident; error - door has not opened with number xx (colum|row) ---> "dr34"
+  'Ident;ER;I2Cx'    - Ident; error - I2C not available with num x
+  'Ident;ER;nuxx'    - Ident; error - number xx not available
   'Ident;off'        - Ident reporting nobody logged in
 
   Commands from Raspi (Commands send from raspi, are allways inspected and if known, executed!!!)
@@ -25,9 +27,10 @@
   'odiyy'     - open door immediately with number yy (colum|row) ---> "odi34"
   'loiyy'     - led on immediately with number yy
   'loall'     - leds on all
-  'lbiyy'     - led blinking immediately with number yy
   'lfiyy'     - led off immediately with number yy
   'lfall'     - leds off all
+  'lboyy'     - led blinking on with number yy
+  'lbfyy'     - led blinking of with number yy
   'tllo'      - from toollocker log all off
   'buzon'     - buzzer extern on
   'buzof'     - buzzer extern off
@@ -62,13 +65,13 @@
 
 // I2C IOPort definition
 byte I2CFound = 0;
-int I2CAdress[] = {0, 0, 0, 0, 0};
+int I2CAdress[] = {0, 0, 0, 0};
 byte I2CTransmissionResult = 0;
 #define I2CPort   0x20  // I2C Adress MCP23017 LCD Display
 // check chanel is active
 #define I2CDoors1 1     // I2C Adress MCP23017 Door row 1 (0x20 + 1)
 #define I2CDoors2 2     // I2C Adress MCP23017 Door row 2 (0x20 + 2)
-#define I2CDoors3 4     // I2C Adress MCP23017 Door row 3 (0x20 + 4)
+#define I2CDoors3 3     // I2C Adress MCP23017 Door row 3 (0x20 + 3)
 
 // Pin Assignments Display (I2C LCD Port A/LED +Button Port B)
 // Switched to LOW
@@ -86,15 +89,19 @@ byte I2CTransmissionResult = 0;
 #define BACKLIGHToff 0x0
 #define BACKLIGHTon  0x1
 
-// Pin Assignments Door Control (I2C (21, 22, 24) Port A: 2 door  Port B 2 doors)
+// Pin Assignments Door Control (I2C (21, 22, 23) Port A: 2 door  Port B 2 doors)
 // Array lock & position, button & Led
 int schloss[] = {4, 0, 4, 8, 12}; // [Numbers, Port 1, Port 2, Port 3, Port 4]
 int tastLed[] = {4, 1, 5, 9, 13};
 int posLock[] = {4, 2, 6, 10, 14};
 int butTast[] = {4, 3, 7, 11, 15};
 
+int flashNum[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 byte sc = 0; // variable for lock colum
 byte sr = 0; // variable for lock row
+byte lc = 0; // variable for led colum
+byte lr = 0; // variable for led row
+byte ln = 0; // variable for led number
 
 // DEFINES
 #define porTime         5 // wait seconds for sending Ident + POR
@@ -152,7 +159,7 @@ Task tBD(1, TASK_ONCE, &FlashCallback);                 // Flash Delay leds
 Task tDF(1, TASK_ONCE, &DispOFF);                       // display off after xx sec
 
 Task tTBC(TASK_SECOND / 10, TASK_FOREVER, &ToolButCheck); // 100ms Check if a button is pressed for open or close one door
-Task tTDL(TASK_SECOND / 10, TASK_FOREVER, &ToolDoorsLed); // Doors led switching
+Task tTDL(TASK_SECOND / 5, TASK_FOREVER, &ToolDoorsLed);  // Doors led flashing
 Task tTOD(1, TASK_ONCE, &ToolOpenDoor);                   // Open a door
 
 // VARIABLES
@@ -197,13 +204,13 @@ void setup()
   Wire.begin();         // I2C
 
   // I2C _ Ports definition only for test if I2C is avilable
-  for (sr = 0; sr < 5; sr++)
+  for (sr = 0; sr < 4; sr++)
   {
     Wire.beginTransmission(I2CPort + sr);
     I2CTransmissionResult = Wire.endTransmission();
     if (I2CTransmissionResult == 0)
     {
-      I2CAdress[I2CFound] = sr;
+      I2CAdress[sr] = sr;
       I2CFound++;
     }
   }
@@ -297,6 +304,7 @@ void setup()
     flash_led(1);
     dispRFID();
     tM.enable();         // xBee check
+    tTDL.enable();
     Serial.print("+++"); //Starting the request of IDENT
   }
   else 
@@ -417,34 +425,50 @@ void DispOFF() {
 void ToolDoorsLed()
 {
   togleds = !togleds;
-  if (togleds)
+  for (ln = 0; ln < 12; ln++)
   {
-    if (nr2Open[1] == 1)
+    if (flashNum[ln] > 0)
     {
-      tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
-    }
-    else if (nr2Open[1] == 2)
-    {
-      tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
-    }
-    else if (nr2Open[1] == 3)
-    {
-      tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
-    }
-  }
-  else
-  {
-    if (nr2Open[1] == 1)
-    {
-      tld1.digitalWrite(tastLed[nr2Open[2]], LOW);
-    }
-    else if (nr2Open[1] == 2)
-    {
-      tld2.digitalWrite(tastLed[nr2Open[2]], LOW);
-    }
-    else if (nr2Open[1] == 3)
-    {
-      tld3.digitalWrite(tastLed[nr2Open[2]], LOW);
+      lc = flashNum[ln] / 10;
+      lr = flashNum[ln] - lc * 10;
+      if (lc > 10)
+        lc = lc - 10;
+      if (togleds && flashNum[ln] < 100)
+      {
+        if (lc == I2CAdress[1])
+        {
+          tld1.digitalWrite(tastLed[lr], HIGH);
+        }
+        if (lc == I2CAdress[2])
+        {
+          tld2.digitalWrite(tastLed[lr], HIGH);
+        }
+        if (lc == I2CAdress[3])
+        {
+          tld3.digitalWrite(tastLed[lr], HIGH);
+        }
+      }
+      else
+      {
+        if (lc == I2CAdress[1])
+        {
+          tld1.digitalWrite(tastLed[lr], LOW);
+          if (flashNum[ln] > 100)
+            flashNum[ln] = 0;
+        }
+        if (lc == I2CAdress[2])
+        {
+          tld2.digitalWrite(tastLed[lr], LOW);
+          if (flashNum[ln] > 100)
+            flashNum[ln] = 0;
+        }
+        if (lc == I2CAdress[3])
+        {
+          tld3.digitalWrite(tastLed[lr], LOW);
+          if (flashNum[ln] > 100)
+            flashNum[ln] = 0;
+        }
+      }
     }
   }
 }
@@ -457,12 +481,10 @@ void ToolButCheck()
     {
       if (I2CAdress[1] == I2CDoors1)
       { // if channel 1 is a live
-        sc = 1;
         if (!tld1.digitalRead(butTast[sr]) && !tld1.digitalRead(posLock[sr]) && countTBo == debouTBo)
         {
-          tTDL.disable();
           nr2Open[0] = -5;
-          nr2Open[1] = sc;
+          nr2Open[1] = I2CDoors1;
           nr2Open[2] = sr;
           Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         }
@@ -474,12 +496,10 @@ void ToolButCheck()
 
       if (I2CAdress[2] == I2CDoors2)
       { // if channel 2 is a live
-        sc = 2;
         if (!tld2.digitalRead(butTast[sr]) && !tld2.digitalRead(posLock[sr]) && countTBo == debouTBo)
         {
-          tTDL.disable();
           nr2Open[0] = -5;
-          nr2Open[1] = sc;
+          nr2Open[1] = I2CDoors2;
           nr2Open[2] = sr;
           Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         }
@@ -491,12 +511,10 @@ void ToolButCheck()
 
       if (I2CAdress[3] == I2CDoors3)
       { // if channel 3 is a live
-        sc = 3;
         if (!tld3.digitalRead(butTast[sr]) && !tld3.digitalRead(posLock[sr]) && countTBo == debouTBo)
         {
-          tTDL.disable();
           nr2Open[0] = -5;
-          nr2Open[1] = sc;
+          nr2Open[1] = I2CDoors3;
           nr2Open[2] = sr;
           Serial.println(String(IDENT) + ";WO" + ";DR" + String(nr2Open[1]) + String(nr2Open[2]));
         }
@@ -509,7 +527,7 @@ void ToolButCheck()
   }
   else if (nr2Open[0] == -1)
   {
-    if (nr2Open[1] == 1)
+    if (nr2Open[1] == I2CAdress[1])
     {
       if (tld1.digitalRead(butTast[nr2Open[2]]) && !tld1.digitalRead(posLock[nr2Open[2]]) && countTBc == debouTBc)
       {
@@ -529,7 +547,7 @@ void ToolButCheck()
       }
     }
 
-    if (nr2Open[1] == 2)
+    if (nr2Open[1] == I2CAdress[2])
     {
       if (tld2.digitalRead(butTast[nr2Open[2]]) && !tld2.digitalRead(posLock[nr2Open[2]]) && countTBc == debouTBc)
       {
@@ -549,7 +567,7 @@ void ToolButCheck()
       }
     }
 
-    if (nr2Open[1] == 3)
+    if (nr2Open[1] == I2CAdress[3])
     {
       if (tld3.digitalRead(butTast[nr2Open[2]]) && !tld3.digitalRead(posLock[nr2Open[2]]) && countTBc == debouTBc)
       {
@@ -575,7 +593,7 @@ void ToolOpenDoor()
 {
   if (nr2Open[0] == -1)
   {
-    if (nr2Open[1] == 1)
+    if (nr2Open[1] == I2CAdress[1])
     {
       if (tld1.digitalRead(posLock[nr2Open[2]]))
       {
@@ -609,7 +627,7 @@ void ToolOpenDoor()
       }
     }
 
-    if (nr2Open[1] == 2)
+    if (nr2Open[1] == I2CAdress[2])
     {
       if (tld2.digitalRead(posLock[nr2Open[2]]))
       {
@@ -642,7 +660,7 @@ void ToolOpenDoor()
       }
     }
 
-    if (nr2Open[1] == 3)
+    if (nr2Open[1] == I2CAdress[3])
     {
       if (tld3.digitalRead(posLock[nr2Open[2]]))
       {
@@ -720,7 +738,7 @@ void granted()
 
 void dooropened(void)
 {
-  if (nr2Open[1] == 1)
+  if (nr2Open[1] == I2CAdress[1])
   {
     if (!tld1.digitalRead(posLock[nr2Open[2]]))
     {
@@ -738,7 +756,7 @@ void dooropened(void)
     }
   }
 
-  if (nr2Open[1] == 2)
+  if (nr2Open[1] == I2CAdress[2])
   {
     if (!tld2.digitalRead(posLock[nr2Open[2]]))
     {
@@ -756,7 +774,7 @@ void dooropened(void)
     }
   }
 
-  if (nr2Open[1] == 3)
+  if (nr2Open[1] == I2CAdress[3])
   {
     if (!tld3.digitalRead(posLock[nr2Open[2]]))
     {
@@ -779,7 +797,6 @@ void dooropened(void)
 void doorsclosed(void)
 {
   tTBC.disable();
-  tTDL.disable();
   tU.disable();
   timer = 0;
   but_led(2);
@@ -883,6 +900,25 @@ void displayON()
   tM.enable();
   intervalRFID = 0;
 }
+
+int checkValues()
+{
+  if (sc == 0 || sc > 3 || sr == 0 || sr > 4)
+  {
+    Serial.println(String(IDENT) + ";ER" + ";NU" + String(sc) + String(sr));
+    return 0;
+  }
+  
+  if ((sc == I2CAdress[1] || sc == I2CAdress[2] || sc == I2CAdress[3]))
+  {
+    return 1;
+  }
+  else 
+  {
+    Serial.println(String(IDENT) + ";ER" + ";I2C" + String(sc));
+    return 0;
+  }
+}
 // End Funktions --------------------------------
 
 // Funktions Serial Input (Event) ---------------
@@ -931,87 +967,140 @@ void evalSerialData()
 
   if (inStr.startsWith("ODI") && inStr.length() >= 4 && inStr.length() < 6)
   {
-    tTDL.disable();
-    nextrun = false;
-    nr2Open[0] = 11;
-    nr2Open[1] = inStr.substring(3, 4).toInt();
-    nr2Open[2] = inStr.substring(4, 5).toInt();
-    dooropened();
+    sc = inStr.substring(3, 4).toInt();
+    sr = inStr.substring(4, 5).toInt();
+    if (checkValues() == 1)
+    {
+      nr2Open[0] = 11;
+      nr2Open[1] = sc;
+      nr2Open[2] = sr;
+      dooropened();
+    }
   }
 
   if (inStr.startsWith("LOI") && inStr.length() >= 4 && inStr.length() < 6)
   {
-    tTDL.disable();
-    nr2Open[1] = inStr.substring(3, 4).toInt();
-    nr2Open[2] = inStr.substring(4, 5).toInt();
-    togleds = false;
-    ToolDoorsLed();
+    sc = inStr.substring(3, 4).toInt();
+    sr = inStr.substring(4, 5).toInt();
+    if (checkValues() == 1)
+    {
+      nr2Open[1] = sc;
+      nr2Open[2] = sr;
+      if (nr2Open[1] == I2CAdress[1])
+      {
+        tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
+      }
+      else if (nr2Open[1] == I2CAdress[2])
+      {
+        tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
+      }
+      else if (nr2Open[1] == I2CAdress[3])
+      {
+        tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
+      }
+    }
   }
 
   if (inStr.startsWith("LOALL") && inStr.length() == 5)
   {
-    tTDL.disable();
-    tld1.digitalWrite(tastLed[1], HIGH);
-    tld1.digitalWrite(tastLed[2], HIGH);
-    tld1.digitalWrite(tastLed[3], HIGH);
-    tld1.digitalWrite(tastLed[4], HIGH);
+    if (I2CAdress[1] == I2CDoors1)
+    {
+      tld1.digitalWrite(tastLed[1], HIGH);
+      tld1.digitalWrite(tastLed[2], HIGH);
+      tld1.digitalWrite(tastLed[3], HIGH);
+      tld1.digitalWrite(tastLed[4], HIGH);
+    }
 
-    tld2.digitalWrite(tastLed[1], HIGH);
-    tld2.digitalWrite(tastLed[2], HIGH);
-    tld2.digitalWrite(tastLed[3], HIGH);
-    tld2.digitalWrite(tastLed[4], HIGH);
+    if (I2CAdress[2] == I2CDoors2)
+    {
+      tld2.digitalWrite(tastLed[1], HIGH);
+      tld2.digitalWrite(tastLed[2], HIGH);
+      tld2.digitalWrite(tastLed[3], HIGH);
+      tld2.digitalWrite(tastLed[4], HIGH);
+    }
 
-    tld3.digitalWrite(tastLed[1], HIGH);
-    tld3.digitalWrite(tastLed[2], HIGH);
-    tld3.digitalWrite(tastLed[3], HIGH);
-    tld3.digitalWrite(tastLed[4], HIGH);
+    if (I2CAdress[3] == I2CDoors3)
+    {
+      tld3.digitalWrite(tastLed[1], HIGH);
+      tld3.digitalWrite(tastLed[2], HIGH);
+      tld3.digitalWrite(tastLed[3], HIGH);
+      tld3.digitalWrite(tastLed[4], HIGH);
+    }
   }
 
-  if (inStr.startsWith("LBI") && inStr.length() >= 4 && inStr.length() < 6)
+  if (inStr.startsWith("LBO") && inStr.length() >= 4 && inStr.length() < 6)
   {
-    nr2Open[1] = inStr.substring(3, 4).toInt();
-    nr2Open[2] = inStr.substring(4, 5).toInt();
-    togleds = false;
-    tTDL.enable();
-    tTDL.restart();
+    sc = inStr.substring(3, 4).toInt();
+    sr = inStr.substring(4, 5).toInt();
+    if (checkValues() == 1)
+    {
+      flashNum[(sc + 3 * (sr - 1)) - 1] = (sc * 10 + sr);
+    }
+  }
+
+  if (inStr.startsWith("LBF") && inStr.length() >= 4 && inStr.length() < 6)
+  {
+    sc = inStr.substring(3, 4).toInt();
+    sr = inStr.substring(4, 5).toInt();
+    if (checkValues() == 1)
+    {
+      flashNum[(sc + 3 * (sr - 1)) - 1] = flashNum[(sc + 3 * (sr - 1)) - 1] + 100;
+    }
   }
 
   if (inStr.startsWith("LFI") && inStr.length() >= 4 && inStr.length() < 6)
   {
-    nr2Open[1] = inStr.substring(3, 4).toInt();
-    nr2Open[2] = inStr.substring(4, 5).toInt();
-    tTDL.disable();
-    if (nr2Open[1] == 1)
+    sc = inStr.substring(3, 4).toInt();
+    sr = inStr.substring(4, 5).toInt();
+    if (checkValues() == 1)
     {
-      tld1.digitalWrite(tastLed[nr2Open[2]], LOW);
-    }
-    else if (nr2Open[1] == 2)
-    {
-      tld2.digitalWrite(tastLed[nr2Open[2]], LOW);
-    }
-    else if (nr2Open[1] == 3)
-    {
-      tld3.digitalWrite(tastLed[nr2Open[2]], LOW);
+      nr2Open[1] = sc;
+      nr2Open[2] = sr;
+      if (nr2Open[1] == I2CAdress[1])
+      {
+        tld1.digitalWrite(tastLed[nr2Open[2]], LOW);
+      }
+      else if (nr2Open[1] == I2CAdress[2])
+      {
+        tld2.digitalWrite(tastLed[nr2Open[2]], LOW);
+      }
+      else if (nr2Open[1] == I2CAdress[3])
+      {
+        tld3.digitalWrite(tastLed[nr2Open[2]], LOW);
+      }
     }
   }
 
   if (inStr.startsWith("LFALL") && inStr.length() == 5)
   {
-    tTDL.disable();
-    tld1.digitalWrite(tastLed[1], LOW);
-    tld1.digitalWrite(tastLed[2], LOW);
-    tld1.digitalWrite(tastLed[3], LOW);
-    tld1.digitalWrite(tastLed[4], LOW);
+    for (sc = 0; sc < 12; sc++)
+    {
+      flashNum[sc] = 0;
+    }
 
-    tld2.digitalWrite(tastLed[1], LOW);
-    tld2.digitalWrite(tastLed[2], LOW);
-    tld2.digitalWrite(tastLed[3], LOW);
-    tld2.digitalWrite(tastLed[4], LOW);
+    if (I2CAdress[1] == I2CDoors1)
+    {
+      tld1.digitalWrite(tastLed[1], LOW);
+      tld1.digitalWrite(tastLed[2], LOW);
+      tld1.digitalWrite(tastLed[3], LOW);
+      tld1.digitalWrite(tastLed[4], LOW);
+    }
 
-    tld3.digitalWrite(tastLed[1], LOW);
-    tld3.digitalWrite(tastLed[2], LOW);
-    tld3.digitalWrite(tastLed[3], LOW);
-    tld3.digitalWrite(tastLed[4], LOW);
+    if (I2CAdress[2] == I2CDoors2)
+    {
+      tld2.digitalWrite(tastLed[1], LOW);
+      tld2.digitalWrite(tastLed[2], LOW);
+      tld2.digitalWrite(tastLed[3], LOW);
+      tld2.digitalWrite(tastLed[4], LOW);
+    }
+
+    if (I2CAdress[3] == I2CDoors3)
+    {
+      tld3.digitalWrite(tastLed[1], LOW);
+      tld3.digitalWrite(tastLed[2], LOW);
+      tld3.digitalWrite(tastLed[3], LOW);
+      tld3.digitalWrite(tastLed[4], LOW);
+    }
   }
 
   if (inStr.startsWith("TLLO") && inStr.length() == 4)
@@ -1031,7 +1120,6 @@ void evalSerialData()
 
   if (inStr.startsWith("SBT") && inStr.length() >= 4 && inStr.length() < 7)
   {
-    tTDL.disable();
     if (inStr.substring(3, 6).toInt() >= 50 && inStr.substring(3, 6).toInt() < 1000)
     {
       tTDL.setInterval(inStr.substring(3, 6).toInt());
