@@ -744,6 +744,7 @@ void dooropened(void)
     {
       dooropend = true;
       tTBC.disable();
+      flashNum[(nr2Open[1] + 3 * (nr2Open[2] - 1)) - 1] = 0;
       tld1.digitalWrite(schloss[nr2Open[2]], HIGH);
       tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
       timer = 0;
@@ -762,6 +763,7 @@ void dooropened(void)
     {
       dooropend = true;
       tTBC.disable();
+      flashNum[(nr2Open[1] + 3 * (nr2Open[2] - 1)) - 1] = 0;
       tld2.digitalWrite(schloss[nr2Open[2]], HIGH);
       tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
       timer = 0;
@@ -780,6 +782,7 @@ void dooropened(void)
     {
       dooropend = true;
       tTBC.disable();
+      flashNum[(nr2Open[1] + 3 * (nr2Open[2] - 1)) - 1] = 0;
       tld3.digitalWrite(schloss[nr2Open[2]], HIGH);
       tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
       timer = 0;
