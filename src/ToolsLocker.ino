@@ -364,7 +364,6 @@ void checkRFID()
     lcd.setCursor(0, 0); lcd.print("Card# "); lcd.print(code);
     displayON();
   }
-
 }
 
 void UnLoCallback() {   // 500ms Tick
@@ -814,7 +813,6 @@ void doorsclosed(void)
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("System shut down at");
-
 }
 
 void but_led(int var)
@@ -979,7 +977,7 @@ void evalSerialData()
     }
   }
 
-  if (inStr.startsWith("LD") && inStr.length() >= 4 && inStr.length() < 6)
+  if (inStr.startsWith("LD") && inStr.length() == 5)
   {
     inChr = inStr.substring(2, 5);
     inChr.getBytes(alc, 4);
@@ -1019,7 +1017,7 @@ void evalSerialData()
     }
   }
 
-  if (inStr.startsWith("LB") && inStr.length() >= 4 && inStr.length() < 6)
+  if (inStr.startsWith("LB") && inStr.length() == 5)
   {
     inChr = inStr.substring(2, 5);
     inChr.getBytes(alc, 4);
