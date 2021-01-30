@@ -25,7 +25,7 @@
   'noreg'     - RFID-Chip not registed
   'ontxx'     - on to open doors for time xx min "ont15"
   'odiyy'     - open door immediately with number yy (colum|row) ---> "odi34"
-  'lohhh'     - leds on hhh = Hex col 1, 2, 3 row 4321 = val 8421 = byte
+  'ldhhh'     - leds direct hhh = Hex col 1, 2, 3 row 4321 = val 8421 = byte
   'lbhhh'     - leds blink hhh = Hex col 1, 2, 3 row 4321 = val 8421 = byte
   'tllo'      - from toollocker log all off
   'buzon'     - buzzer extern on
@@ -305,7 +305,7 @@ void setup()
     tTDL.enable();
     Serial.print("+++"); //Starting the request of IDENT
   }
-  else 
+  else
   {
     tB.enable();  // enable Task Error blinking
     tB.setInterval(TASK_SECOND);
@@ -912,7 +912,7 @@ int checkValues()
   {
     return 1;
   }
-  else 
+  else
   {
     Serial.println(String(IDENT) + ";ER" + ";I2C" + String(sc));
     return 0;
@@ -943,7 +943,7 @@ void evalSerialData()
     IDENT = inStr;
   }
 
-  if (inStr.startsWith("TIME")) 
+  if (inStr.startsWith("TIME"))
   {
     inStr.concat("                   ");     // add blanks to string
     lcd.setCursor(0, 1); lcd.print(inStr.substring(4,24));
