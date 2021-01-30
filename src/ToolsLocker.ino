@@ -25,12 +25,8 @@
   'noreg'     - RFID-Chip not registed
   'ontxx'     - on to open doors for time xx min "ont15"
   'odiyy'     - open door immediately with number yy (colum|row) ---> "odi34"
-  'loiyy'     - led on immediately with number yy
-  'loall'     - leds on all
-  'lfiyy'     - led off immediately with number yy
-  'lfall'     - leds off all
-  'lboyy'     - led blinking on with number yy
-  'lbfyy'     - led blinking of with number yy
+  'lohhh'     - leds on hhh = Hex col 1, 2, 3 row 4321 = val 8421 = byte
+  'lbhhh'     - leds blink hhh = Hex col 1, 2, 3 row 4321 = val 8421 = byte
   'tllo'      - from toollocker log all off
   'buzon'     - buzzer extern on
   'buzof'     - buzzer extern off
@@ -41,7 +37,7 @@
   last change: 05.01.2021 by Michael Muehl
   changed: toollocker now with 12 (10) parts, add all leds on / off and Buzzer external
 */
-#define Version "0.9.9" // (Test =1.0.x ==> 1.0.0)
+#define Version "1.0.0" // (Test =1.0.x ==> 1.0.1)
 
 #include <Arduino.h>
 #include <TaskScheduler.h>
@@ -102,6 +98,7 @@ byte sr = 0; // variable for lock row
 byte lc = 0; // variable for led colum
 byte lr = 0; // variable for led row
 byte ln = 0; // variable for led number
+byte alc[5]; // array for cols hhh
 
 // DEFINES
 #define porTime         5 // wait seconds for sending Ident + POR
@@ -189,6 +186,7 @@ bool togleds = false;        // toggle led doors
 String inStr = "";      // a string to hold incoming data
 String IDENT = "";      // Machine identifier for remote access control
 String SFMes = "";      // String send for repeatMES
+String inChr = "";      // Input char
 byte plplpl = 0;        // send +++ control AT sequenz
 byte getTime = porTime;
 
@@ -981,128 +979,74 @@ void evalSerialData()
     }
   }
 
-  if (inStr.startsWith("LOI") && inStr.length() >= 4 && inStr.length() < 6)
+  if (inStr.startsWith("LD") && inStr.length() >= 4 && inStr.length() < 6)
   {
-    sc = inStr.substring(3, 4).toInt();
-    sr = inStr.substring(4, 5).toInt();
-    if (checkValues() == 1)
+    inChr = inStr.substring(2, 5);
+    inChr.getBytes(alc, 4);
+    for (byte i = 0; i < 4; i++)
     {
-      nr2Open[1] = sc;
-      nr2Open[2] = sr;
-      if (nr2Open[1] == I2CAdress[1])
+      if (alc[i] > 57)
       {
-        tld1.digitalWrite(tastLed[nr2Open[2]], HIGH);
+        alc[i] = alc[i] - 55;
       }
-      else if (nr2Open[1] == I2CAdress[2])
+      else
       {
-        tld2.digitalWrite(tastLed[nr2Open[2]], HIGH);
-      }
-      else if (nr2Open[1] == I2CAdress[3])
-      {
-        tld3.digitalWrite(tastLed[nr2Open[2]], HIGH);
+        alc[i] = alc[i] - 48;
       }
     }
-  }
-
-  if (inStr.startsWith("LOALL") && inStr.length() == 5)
-  {
     if (I2CAdress[1] == I2CDoors1)
     {
-      tld1.digitalWrite(tastLed[1], HIGH);
-      tld1.digitalWrite(tastLed[2], HIGH);
-      tld1.digitalWrite(tastLed[3], HIGH);
-      tld1.digitalWrite(tastLed[4], HIGH);
+      tld1.digitalWrite(tastLed[1], bitRead(alc[0], 0));
+      tld1.digitalWrite(tastLed[2], bitRead(alc[0], 1));
+      tld1.digitalWrite(tastLed[3], bitRead(alc[0], 2));
+      tld1.digitalWrite(tastLed[4], bitRead(alc[0], 3));
     }
 
     if (I2CAdress[2] == I2CDoors2)
     {
-      tld2.digitalWrite(tastLed[1], HIGH);
-      tld2.digitalWrite(tastLed[2], HIGH);
-      tld2.digitalWrite(tastLed[3], HIGH);
-      tld2.digitalWrite(tastLed[4], HIGH);
+      tld2.digitalWrite(tastLed[1], bitRead(alc[1], 0));
+      tld2.digitalWrite(tastLed[2], bitRead(alc[1], 1));
+      tld2.digitalWrite(tastLed[3], bitRead(alc[1], 2));
+      tld2.digitalWrite(tastLed[4], bitRead(alc[1], 3));
     }
 
     if (I2CAdress[3] == I2CDoors3)
     {
-      tld3.digitalWrite(tastLed[1], HIGH);
-      tld3.digitalWrite(tastLed[2], HIGH);
-      tld3.digitalWrite(tastLed[3], HIGH);
-      tld3.digitalWrite(tastLed[4], HIGH);
+      tld3.digitalWrite(tastLed[1], bitRead(alc[2], 0));
+      tld3.digitalWrite(tastLed[2], bitRead(alc[2], 1));
+      tld3.digitalWrite(tastLed[3], bitRead(alc[2], 2));
+      tld3.digitalWrite(tastLed[4], bitRead(alc[2], 3));
     }
   }
 
-  if (inStr.startsWith("LBO") && inStr.length() >= 4 && inStr.length() < 6)
+  if (inStr.startsWith("LB") && inStr.length() >= 4 && inStr.length() < 6)
   {
-    sc = inStr.substring(3, 4).toInt();
-    sr = inStr.substring(4, 5).toInt();
-    if (checkValues() == 1)
+    inChr = inStr.substring(2, 5);
+    inChr.getBytes(alc, 4);
+    for (byte i = 0; i < 4; i++)
     {
-      flashNum[(sc + 3 * (sr - 1)) - 1] = (sc * 10 + sr);
-    }
-  }
-
-  if (inStr.startsWith("LBF") && inStr.length() >= 4 && inStr.length() < 6)
-  {
-    sc = inStr.substring(3, 4).toInt();
-    sr = inStr.substring(4, 5).toInt();
-    if (checkValues() == 1)
-    {
-      flashNum[(sc + 3 * (sr - 1)) - 1] = flashNum[(sc + 3 * (sr - 1)) - 1] + 100;
-    }
-  }
-
-  if (inStr.startsWith("LFI") && inStr.length() >= 4 && inStr.length() < 6)
-  {
-    sc = inStr.substring(3, 4).toInt();
-    sr = inStr.substring(4, 5).toInt();
-    if (checkValues() == 1)
-    {
-      nr2Open[1] = sc;
-      nr2Open[2] = sr;
-      if (nr2Open[1] == I2CAdress[1])
+      if (alc[i] > 57)
       {
-        tld1.digitalWrite(tastLed[nr2Open[2]], LOW);
+        alc[i] = alc[i] - 55;
       }
-      else if (nr2Open[1] == I2CAdress[2])
+      else
       {
-        tld2.digitalWrite(tastLed[nr2Open[2]], LOW);
-      }
-      else if (nr2Open[1] == I2CAdress[3])
-      {
-        tld3.digitalWrite(tastLed[nr2Open[2]], LOW);
+        alc[i] = alc[i] - 48;
       }
     }
-  }
-
-  if (inStr.startsWith("LFALL") && inStr.length() == 5)
-  {
-    for (sc = 0; sc < 12; sc++)
+    for (sc = 1; sc < 4; sc++)
     {
-      flashNum[sc] = 0;
-    }
-
-    if (I2CAdress[1] == I2CDoors1)
-    {
-      tld1.digitalWrite(tastLed[1], LOW);
-      tld1.digitalWrite(tastLed[2], LOW);
-      tld1.digitalWrite(tastLed[3], LOW);
-      tld1.digitalWrite(tastLed[4], LOW);
-    }
-
-    if (I2CAdress[2] == I2CDoors2)
-    {
-      tld2.digitalWrite(tastLed[1], LOW);
-      tld2.digitalWrite(tastLed[2], LOW);
-      tld2.digitalWrite(tastLed[3], LOW);
-      tld2.digitalWrite(tastLed[4], LOW);
-    }
-
-    if (I2CAdress[3] == I2CDoors3)
-    {
-      tld3.digitalWrite(tastLed[1], LOW);
-      tld3.digitalWrite(tastLed[2], LOW);
-      tld3.digitalWrite(tastLed[3], LOW);
-      tld3.digitalWrite(tastLed[4], LOW);
+      for (sr = 1; sr < 5; sr++)
+      {
+        if (bitRead(alc[sc - 1], sr - 1))
+        {
+          flashNum[(sc + 3 * (sr - 1)) - 1] = (sc * 10 + sr);
+        }
+        else
+        {
+          flashNum[(sc + 3 * (sr - 1)) - 1] = flashNum[(sc + 3 * (sr - 1)) - 1] + 100;
+        }
+      }
     }
   }
 
