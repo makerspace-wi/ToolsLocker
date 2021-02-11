@@ -80,6 +80,6 @@ LED-Taster-Anschluss (female):
 - Blau ist Tasterkontakt
 
 Signalkabel (grau):
-Schwarz & rot sind für das Schloss (2-polig female)
-Weiß und Gelb/Grün sind für den Schloßkontakt (2-polig male)
-Grau, braun und Blau sind für den Taster (3-polig male)
+- Schwarz & rot sind für das Schloss (2-polig female)
+- Weiß und Gelb/Grün sind für den Schloßkontakt (2-polig male)
+- Grau, braun und Blau sind für den Taster (3-polig male)
