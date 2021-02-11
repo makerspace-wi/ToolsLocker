@@ -80,6 +80,7 @@ Grober Funktionsablauf (Vorschlag):
 - Blau ist Tasterkontakt
 
 <h4>Signalkabel (grau):</h4>
+
 - Schwarz & rot sind für das Schloss (2-polig female)
 - Weiß und Gelb/Grün sind für den Schloßkontakt (2-polig male)
 - Grau (+5V), braun (LED) und Blau (Kontakt) sind für den Taster (3-polig male)
