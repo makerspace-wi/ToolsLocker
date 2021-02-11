@@ -71,11 +71,11 @@ Grober Funktionsablauf (Vorschlag):
 
 <h4>Elektromagnetisches Schloss:</h4>
 
- - Anschluss Schloss (male)
- - Anschluss Schlosskontakt (female)
+ - Anschluss Schloss (2-poloig male)
+ - Anschluss Schlosskontakt (2-polig female)
 
 
-<h4>LED-Taster-Anschluss (female):</h4>
+<h4>LED-Taster-Anschluss (3-polig female):</h4>
 
 - Grau ist +5V
 - Lila ist LED (Kathode)
