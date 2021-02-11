@@ -66,3 +66,20 @@ Grober Funktionsablauf (Vorschlag):
 ![IMG_7514](https://user-images.githubusercontent.com/42463588/102316586-81204a80-3f76-11eb-94c7-06950fffdf84.jpg)
 
 ![IMG_7515](https://user-images.githubusercontent.com/42463588/102316639-9ac19200-3f76-11eb-9788-50943ebae297.jpg)
+
+<h2>Tolo-Farbkodierung Kabel / Stecker </h2>
+
+Elektromagnetisches Schloss:
+ - Anschluss Schloss (male)
+ - Anschluss Schlosskontakt (female)
+
+
+LED-Taster-Anschluss (female):
+- Grau ist +5V
+- Lila ist LED (Kathode)
+- Blau ist Tasterkontakt
+
+Signalkabel (grau):
+Schwarz & rot sind für das Schloss (2-polig female)
+Weiß und Gelb/Grün sind für den Schloßkontakt (2-polig male)
+Grau, braun und Blau sind für den Taster (3-polig male)
