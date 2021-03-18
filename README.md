@@ -89,5 +89,6 @@ Grober Funktionsablauf (Vorschlag):
 <h2>Final Controller Box</h2>
 
 ![IMG_7516](https://user-images.githubusercontent.com/42463588/111650629-c36f5700-8805-11eb-865c-ec82ad748833.png)
-Pink 1 bis 3 entsprechen der Spalten (links Spalte 1 - rechts Spalte 3)
+
+Pink 1 bis 3 entsprechen der Spalten (links Spalte 1 - rechts Spalte 3)<br>
 Orange 1 bis 4 entsprechen der Reihe (oben Reihe 1, unten Reihe 4)
