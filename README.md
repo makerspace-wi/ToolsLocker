@@ -87,4 +87,5 @@ Grober Funktionsablauf (Vorschlag):
 - Weiß und Gelb/Grün sind für den Schloßkontakt (2-polig male)
 - Grau (+5V), braun (LED) und Blau (Kontakt) sind für den Taster (3-polig male)
 <h2>Final Controller Box</h2>
-![image](https://user-images.githubusercontent.com/42463588/111650629-c36f5700-8805-11eb-865c-ec82ad748833.png)
+
+![IMG_7516](https://user-images.githubusercontent.com/42463588/111650629-c36f5700-8805-11eb-865c-ec82ad748833.png)
