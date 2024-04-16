@@ -706,8 +706,8 @@ int getNum(String strNum) // Check if realy numbers
     if (!isDigit(strNum[i])) 
     {
       Serial.println(String(IDENT) + ";?;" + inStr + ";Num?;" + strNum);
-      lcd.setCursor(19,0);
-      lcd.print("?");
+      lcd.setCursor(0, 2); lcd.print("no mumber           ");
+      lcd.setCursor(0, 3); lcd.print("logout and reset    ");
       return 0;
     }
   }
@@ -987,12 +987,12 @@ void evalSerialData()
     nextrun = false;
     nr2Open[0] = 0;
     CLOSE = getNum(inStr.substring(3));
-    opendoors(CLOSE);
+    if (CLOSE > 0) opendoors(CLOSE);
   }
   else if (inStr.startsWith("ODI") && inStr.length() >= 4 && inStr.length() < 6)
   {
     sc = getNum(inStr.substring(3, 4));
-    sr = getNum(inStr.substring(4, 5));;
+    sr = getNum(inStr.substring(4, 5));
     if (checkValues() == 1)
     {
       nr2Open[0] = 11;
@@ -1104,7 +1104,7 @@ void evalSerialData()
   {
     Serial.println(String(IDENT) + ";cmd?;" + inStr);
     lcd.setCursor(0, 2); lcd.print("Unknown command     ");
-    lcd.setCursor(0, 3); lcd.print("                    ");
+    lcd.setCursor(0, 3); lcd.print("logout and reset    ");
     noact();
   }
   inStr = "";
