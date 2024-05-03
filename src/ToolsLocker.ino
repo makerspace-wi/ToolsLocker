@@ -39,7 +39,7 @@
   last change: 14.04.2024 by Michael Muehl
   changed: now 9 Toolslocker with 12 doors are possible
 */
-#define Version "1.2.0" // (Test =1.2.x ==> 1.2.1)
+#define Version "1.2.1" // (Test =1.2.x ==> 1.2.1)
 #define xBeeName  "TOL" // Name and number for xBee
 #define checkFA      2  // event check for every (1 second / FActor)
 
@@ -1023,14 +1023,14 @@ void evalSerialData()
       tld1.digitalWrite(tastLed[3], bitRead(alc[0], 2));
       tld1.digitalWrite(tastLed[4], bitRead(alc[0], 3));
     }
-    else if (I2CAdress[2] == I2CDoors2)
+    if (I2CAdress[2] == I2CDoors2)
     {
       tld2.digitalWrite(tastLed[1], bitRead(alc[1], 0));
       tld2.digitalWrite(tastLed[2], bitRead(alc[1], 1));
       tld2.digitalWrite(tastLed[3], bitRead(alc[1], 2));
       tld2.digitalWrite(tastLed[4], bitRead(alc[1], 3));
     }
-    else if (I2CAdress[3] == I2CDoors3)
+    if (I2CAdress[3] == I2CDoors3)
     {
       tld3.digitalWrite(tastLed[1], bitRead(alc[2], 0));
       tld3.digitalWrite(tastLed[2], bitRead(alc[2], 1));
