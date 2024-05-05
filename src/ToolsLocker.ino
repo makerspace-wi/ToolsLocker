@@ -36,10 +36,10 @@
   'r3t...' - display text in row 3 "r3tabcde12345", max 20
   'r4t...' - display text in row 4 "r4tabcde12345", max 20
 
-  last change: 14.04.2024 by Michael Muehl
-  changed: now 9 Toolslocker with 12 doors are possible
+  last change: 05.05.2024 by Michael Muehl
+  changed: task for doosled only active if someone is logged in
 */
-#define Version "1.2.1" // (Test =1.2.x ==> 1.2.1)
+#define Version "1.2.2" // (Test =1.2.x ==> 1.2.3)
 #define xBeeName  "TOL" // Name and number for xBee
 #define checkFA      2  // event check for every (1 second / FActor)
 
@@ -298,7 +298,6 @@ void setup()
     flash_led(1);
     dispRFID();
     tM.enable();         // xBee check
-    tTDL.enable();
     Serial.print("+++"); //Starting the request of IDENT
   }
   else
@@ -749,6 +748,7 @@ void granted()
   lcd.print("Access granted      ");
   tR.disable();
   tU.enable();
+  tTDL.enable();
   tTBC.enable();
 }
 
@@ -816,6 +816,7 @@ void dooropened(void)
 void doorsclosed(void)
 {
   tTBC.disable();
+  tTDL.disable();
   tU.disable();
   timer = 0;
   but_led(2);
