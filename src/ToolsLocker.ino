@@ -30,16 +30,17 @@
   'ldhhh'  - leds direct hhh = Hex col 1, 2, 3 row 4321 = val 8421 = byte
   'lbhhh'  - leds blink hhh = Hex col 1, 2, 3 row 4321 = val 8421 = byte
   'tllo'   - from toolslocker log all off
-  'buzon'  - buzzer extern on
-  'buzof'  - buzzer extern off
+  'bueon'  - Buzzer Extern ON
+  'bueto'  - Buzzer Extern TOggle
+  'bueof'  - Buzzer Extern OFf
   'sbtzzz' - set blink time between zzz = 50ms ---> <1000ms (default = 100ms)
   'r3t...' - display text in row 3 "r3tabcde12345", max 20
   'r4t...' - display text in row 4 "r4tabcde12345", max 20
 
-  last change: 05.05.2024 by Michael Muehl
-  changed: task for doosled only active if someone is logged in
+  last change: 20.10.2024 by Michael Muehl
+  changed: add toogle for external buzzer
 */
-#define Version "1.2.2" // (Test =1.2.x ==> 1.2.3)
+#define Version "1.2.3" // (Test =1.2.x ==> 1.2.4)
 #define xBeeName  "TOL" // Name and number for xBee
 #define checkFA      2  // event check for every (1 second / FActor)
 
@@ -110,7 +111,7 @@ byte alc[5]; // array for cols hhh
 #define CLOSE2END     15 // [ 15] MINUTES blinking before activation is switched off
 #define CLEANON        6 // [  6] TASK_SECOND dust collector on after current off
 #define repMES         1 // [  1] repeat commands
-#define periRead     100 // [100] read 100ms analog input for 50Hz (current)
+#define periRead     100 // [100] ms read analog input for 50Hz (current)
 #define currHyst      10 // [ 10] hystereses for current detection
 #define currMean       3 // [  3] current average over ...
 #define intervalINC 3600 // [3600] * 4
@@ -123,9 +124,9 @@ byte alc[5]; // array for cols hhh
 #define debouTBc       5 // [  5] debounce door tool locker close
 
 // CREATE OBJECTS
-Scheduler runner;
+Scheduler r;
 LCDLED_BreakOUT lcd = LCDLED_BreakOUT();
-MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
+MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance
 Adafruit_MCP23017 tld1;
 Adafruit_MCP23017 tld2;
 Adafruit_MCP23017 tld3;
@@ -151,18 +152,18 @@ void OnTimed(long);
 void flash_led(int);
 
 // TASKS
-Task tM(TASK_SECOND / 2, TASK_FOREVER, &checkXbee, &runner);	   // 500ms main task
-Task tR(TASK_SECOND / 2, 0, &repeatMES, &runner);                // 500ms * repMES repeat messages
-Task tU(TASK_SECOND / checkFA, TASK_FOREVER, &UnLoCallback, &runner);  // 1000ms / checkFA ctor
-Task tB(TASK_SECOND * 5, TASK_FOREVER, &BlinkCallback, &runner); // 5000ms blinking for several events
+Task tM(TASK_SECOND / 2, TASK_FOREVER, &checkXbee, &r);	         // 500ms main task
+Task tR(TASK_SECOND / 2, 0, &repeatMES, &r);                     // 500ms * repMES repeat messages
+Task tU(TASK_SECOND / checkFA, TASK_FOREVER, &UnLoCallback, &r); // 1000ms / checkFA ctor
+Task tB(TASK_SECOND * 5, TASK_FOREVER, &BlinkCallback, &r);      // 5000ms blinking for several events
 
-Task tBU(TASK_SECOND / 10, 6, &BuzzerOn, &runner);               // 100ms 6x =600ms buzzer on for 6 times
-Task tBD(1, TASK_ONCE, &FlashCallback, &runner);                 // Flash Delay leds
-Task tDF(1, TASK_ONCE, &DispOFF, &runner);                       // display off after xx sec
+Task tBU(TASK_SECOND / 10, 6, &BuzzerOn, &r);                    // 100ms 6x =600ms buzzer on for 6 times
+Task tBD(1, TASK_ONCE, &FlashCallback, &r);                      // Flash Delay leds
+Task tDF(1, TASK_ONCE, &DispOFF, &r);                            // display off after xx sec
 
-Task tTBC(TASK_SECOND / 10, TASK_FOREVER, &ToolButCheck, &runner); // 100ms Check if a button is pressed for open or close one door
-Task tTDL(TASK_SECOND / 5, TASK_FOREVER, &ToolDoorsLed, &runner);  // Doors led flashing
-Task tTOD(1, TASK_ONCE, &ToolOpenDoor, &runner);                   // Open a door
+Task tTBC(TASK_SECOND / 10, TASK_FOREVER, &ToolButCheck, &r);    // 100ms Check if a button is pressed for open or close one door
+Task tTDL(TASK_SECOND / 5, TASK_FOREVER, &ToolDoorsLed, &r);     // Doors led flashing
+Task tTOD(1, TASK_ONCE, &ToolOpenDoor, &r);                      // Open a door
 
 // VARIABLES
 unsigned long val;
@@ -174,9 +175,9 @@ bool toggle = false;
 unsigned long code;
 byte atqa[2];
 byte atqaLen = sizeof(atqa);
-byte intervalRFID = 0;      // 0 = off; from 1 sec to 6 sec after Displayoff
-bool displayIsON = false;   // if display is switched on = true
-bool nextrun = false;       // programm runs more then 1 time
+byte intervalRFID = 0;       // 0 = off; from 1 sec to 6 sec after Displayoff
+bool displayIsON = false;    // if display is switched on = true
+bool nextrun = false;        // programm runs more then 1 time
 
 // tool locker doors:
 unsigned int CLOSE = CLOSE2END; // RAM cell for before activation is off
@@ -209,9 +210,9 @@ void setup()
 
   SPI.begin();             // SPI
 
-  mfrc522.PCD_Init();      // Init MFRC522
-  mfrc522.PCD_SetAntennaGain(mfrc522.RxGain_avg);
-  // mfrc522.PCD_SetAntennaGain(mfrc522.RxGain_max);
+  rfid.PCD_Init();      // Init MFRC522
+  // rfid.PCD_SetAntennaGain(rfid.RxGain_avg);
+  rfid.PCD_SetAntennaGain(rfid.RxGain_max);
 
   // IO MODES
   pinMode(xBuError, OUTPUT);
@@ -223,7 +224,7 @@ void setup()
   digitalWrite(SSR_POWER, LOW);
   digitalWrite(SSR_BUZZER, LOW);
 
-  runner.startNow();
+  r.startNow();
 
   // Check if I2C _ Ports are avilable
   for (sr = 0; sr < 4; sr++)
@@ -298,7 +299,7 @@ void setup()
     flash_led(1);
     dispRFID();
     tM.enable();         // xBee check
-    Serial.print("+++"); //Starting the request of IDENT
+    Serial.print(F("+++")); //Starting the request of IDENT
   }
   else
   {
@@ -336,18 +337,18 @@ void retryPOR()   // wait until time string arrived
     tR.setIterations(repMES);
     tM.setCallback(checkRFID);
     tM.enable();
-    tB.disable();
     displayON();
   }
 }
 
 void checkRFID()  // wait until rfid token is recognized
 { // 500ms Tick
-  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial())
+  if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial())
   {
     code = 0;
-    for (byte i = 0; i < mfrc522.uid.size; i++) {
-      code = ((code + mfrc522.uid.uidByte[i]) * 10);
+    for (byte i = 0; i < rfid.uid.size; i++)
+    {
+      code = ((code + rfid.uid.uidByte[i]) * 10);
     }
     if (!digitalRead(SSR_POWER))
     { // Check if machine is switched on
@@ -358,8 +359,8 @@ void checkRFID()  // wait until rfid token is recognized
     }
     Serial.println("card;" + String(code));
     // Display changes
-    lcd.setCursor(5, 0); lcd.print("               ");
-    lcd.setCursor(0, 0); lcd.print("Card# "); lcd.print(code);
+    lcd.setCursor(5, 0); lcd.print(F("               "));
+    lcd.setCursor(0, 0); lcd.print(F("Card# ")); lcd.print(code);
     displayON();
   }
 }
@@ -705,8 +706,8 @@ int getNum(String strNum) // Check if realy numbers
     if (!isDigit(strNum[i])) 
     {
       Serial.println(String(IDENT) + ";?;" + inStr + ";Num?;" + strNum);
-      lcd.setCursor(0, 2); lcd.print("no mumber           ");
-      lcd.setCursor(0, 3); lcd.print("logout and reset    ");
+      lcd.setCursor(0, 2); lcd.print(F("no mumber           "));
+      lcd.setCursor(0, 3); lcd.print(F("logout and reset    "));
       return 0;
     }
   }
@@ -731,7 +732,7 @@ void opendoors(long min)
   Serial.println(String(IDENT) + ";ont");
   char tbs[8];
   sprintf(tbs, "% 4d", timer / (60 * checkFA));
-  lcd.setCursor(0, 3); lcd.print("Time left (min):"); lcd.print(tbs);
+  lcd.setCursor(0, 3); lcd.print(F("Time left (min):")); lcd.print(tbs);
   granted();
 }
 
@@ -745,7 +746,7 @@ void granted()
   GoodSound();
   digitalWrite(SSR_POWER, HIGH);
   lcd.setCursor(0, 2);
-  lcd.print("Access granted      ");
+  lcd.print(F("Access granted      "));
   tR.disable();
   tU.enable();
   tTDL.enable();
@@ -812,9 +813,8 @@ void dooropened(void)
   }
 }
 
-// Switch off machine and stop
 void doorsclosed(void)
-{
+{ // Switch off machine and stop
   tTBC.disable();
   tTDL.disable();
   tU.disable();
@@ -832,11 +832,16 @@ void doorsclosed(void)
   // Display change
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("System shut down at");
+  lcd.print(F("System shut down at"));
 }
 
-void but_led(int var) // control button leds
-{
+void BuzExtTog()
+{ // toogle SSR_Buzzer for gong
+  digitalWrite(SSR_BUZZER, !digitalRead(SSR_BUZZER));
+}
+
+void but_led(int var)
+{ // button led switching
   switch (var)
   {
     case 1: // LED rt & gn off
@@ -854,8 +859,8 @@ void but_led(int var) // control button leds
   }
 }
 
-void flash_led(int var) // control flash leds
-{
+void flash_led(int var)
+{ // flash leds switching
   switch (var)
   {
     case 1:   // LEDs off
@@ -908,7 +913,7 @@ void GoodSound(void) // generate good sound
 void dispRFID(void)
 {
   lcd.print("Sys V" + String(Version).substring(0,3) + " starts at:");
-  lcd.setCursor(0, 1); lcd.print("Wait Sync xBee:");
+  lcd.setCursor(0, 1); lcd.print(F("Wait Sync xBee:"));
 }
 
 void displayON()  // switch display on
@@ -948,7 +953,7 @@ void evalSerialData()
   {
     if (co_ok == 0)
     {
-      Serial.println("ATNI");
+      Serial.println(F("ATNI"));
       ++co_ok;
     }
     else
@@ -962,7 +967,7 @@ void evalSerialData()
     {
       IDENT = inStr;
       toloNR = inStr.substring(1).toInt();
-      Serial.println("ATCN");
+      Serial.println(F("ATCN"));
     }
     else
     {
@@ -979,8 +984,8 @@ void evalSerialData()
   }
   else if (inStr.startsWith("NOREG") && inStr.length() ==5)
   { // chip not registed
-    lcd.setCursor(0, 2); lcd.print("Tag not registered  ");
-    lcd.setCursor(0, 3); lcd.print("===> No access! <===");
+    lcd.setCursor(0, 2); lcd.print(F("Tag not registered  "));
+    lcd.setCursor(0, 3); lcd.print(F("===> No access! <==="));
     noact();
   }
   else if (inStr.startsWith("ONT") && inStr.length() >= 4 && inStr.length() < 7) 
@@ -1073,13 +1078,21 @@ void evalSerialData()
   {
     doorsclosed(); // Doors all closed
   }
-  else if (inStr.startsWith("BUZON") && inStr.length() == 5)
+  else if (inStr.startsWith("BUEON") && inStr.length() == 5)
   {
     digitalWrite(SSR_BUZZER, HIGH);
+    tB.disable();
   }
-  else if (inStr.startsWith("BUZOF") && inStr.length() == 5)
+  else if (inStr.startsWith("BUETO") && inStr.length() == 5)
+  {
+    digitalWrite(SSR_BUZZER, HIGH);
+    tB.setCallback(BuzExtTog);
+    tB.enable();
+  }
+  else if (inStr.startsWith("BUEOF") && inStr.length() == 5)
   {
     digitalWrite(SSR_BUZZER, LOW);
+    tB.disable();
   }
   else if (inStr.startsWith("SBT") && inStr.length() >= 4 && inStr.length() < 7)
   {
@@ -1104,34 +1117,29 @@ void evalSerialData()
   else
   {
     Serial.println(String(IDENT) + ";cmd?;" + inStr);
-    lcd.setCursor(0, 2); lcd.print("Unknown command     ");
-    lcd.setCursor(0, 3); lcd.print("logout and reset    ");
+    lcd.setCursor(0, 2); lcd.print(F("Unknown command     "));
+    lcd.setCursor(0, 3); lcd.print(F("logout and reset    "));
     noact();
   }
   inStr = "";
 }
-
-/* SerialEvent occurs whenever a new data comes in the
-  hardware serial RX.  This routine is run between each
-  time loop() runs, so using delay inside loop can delay
-  response.  Multiple bytes of data may be available.
-*/
-void serialEvent()
-{
-  char inChar = (char)Serial.read();
-  if (inChar == '\x0d')
-  {
-    evalSerialData();
-    inStr = "";
-  }
-  else if (inChar != '\x0a')
-  {
-    inStr += inChar;
-  }
-}
 // End Funktions Serial Input -------------------
 
 // PROGRAM LOOP AREA ----------------------------
-void loop() {
-  runner.execute();
+void loop()
+{
+  r.execute();
+  if (Serial.available() > 0)
+  {
+    char inChar = (char)Serial.read();
+    if (inChar == '\x0d')
+    {
+      evalSerialData();
+      inStr = "";
+    }
+    else if (inChar != '\x0a')
+    {
+      inStr += inChar;
+    }
+  }
 }
