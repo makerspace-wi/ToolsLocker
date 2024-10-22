@@ -211,8 +211,7 @@ void setup()
   SPI.begin();             // SPI
 
   rfid.PCD_Init();      // Init MFRC522
-  // rfid.PCD_SetAntennaGain(rfid.RxGain_avg);
-  rfid.PCD_SetAntennaGain(rfid.RxGain_max);
+  rfid.PCD_SetAntennaGain(rfid.RxGain_avg);
 
   // IO MODES
   pinMode(xBuError, OUTPUT);
